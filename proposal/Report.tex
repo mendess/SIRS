@@ -1,0 +1,113 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+\usepackage{a4wide}
+\usepackage[pdftex,hidelinks]{hyperref}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+\pagestyle{fancy}
+\fancyhf{}
+
+\rfoot{Page \thepage~of~\pageref{LastPage}}
+\begin{document}
+
+\title{????????PROJECT NAME????????}
+%todo: Member pictures
+\author{%
+    95145 --- Eva Verboom\\
+    95383 --- Felipe Gorostiaga \\
+    97144 --- Pedro Mendes \\
+}
+\date{\today}
+
+\begin{titlepage}
+
+    %título
+    \begin{center}
+        \begin{minipage}{0.75\linewidth}
+            \centering
+            \vspace{1.5cm}
+            %títulos
+            \href{https://fenix.tecnico.ulisboa.pt/disciplinas/SIRS7/2019-2020/1-semestre}
+            {\scshape\LARGE Network and Computer Security} \par
+            \vspace{1cm}
+            {\scshape\Large Alameda} \par
+            \vspace{1cm}
+            {\scshape\Large Group 28} \par
+            \vspace{1.5cm}
+
+            \maketitle
+        \end{minipage}
+    \end{center}
+
+\end{titlepage}
+
+\tableofcontents
+
+\pagebreak
+
+%% I  Problem (Given the chosen scenario, where is security necessary? What is the main problem
+%% being solved? Use around 200 words)
+\section{The Problem}
+
+%% a. Requirements (Which security requirements were identified for the solution? Present as a list)
+\subsection{Requirements}
+
+The security requirements needed to solve this problem are then:
+\begin{itemize}
+    \item PLACEHOLDER 1
+\end{itemize}
+
+%% b. Trust assumptions (Be explicit about trust relationships. Who will be fully trusted,
+%% partially trusted, or untrusted)
+\subsection{Trust Assumptions}
+
+%% Proposed solution (overview with diagram and explanation with around 200 words or less)
+\section{Proposed Solution}
+
+%% a) Deployment (describe distinct machines and how they will be interconnected)
+\subsection{Deployment}
+
+%% Secure channel(s) to configure (identify communication entities; existing library/tool to use;
+%% what keys will exist and how will they be distributed)
+\subsection{Secure channels}
+
+%% Secure protocol(s) to develop (identify communication entities; language to use for
+%% implementation; what keys will exist and how will they be distributed)
+\subsection{Secure Protocols}
+
+\section{Plan}
+
+%% Versions (Describe basic, intermediate and advanced versions of the work and when are they
+%% expected to be achieved)
+\subsection{Project Versions}
+
+\subsubsection{Minimum Viable Product (MVP)}
+
+\subsubsection{Intermediate}
+
+\subsubsection{Full Feature Release}
+
+%% Effort commitments (table containing one row per week until the submission date; and one
+%% column per group member with expected activities for the given week; some cells may be left
+%% blank because of work in other courses)
+\subsection{Effort Commitments}
+
+\begin{tabular}{llll}
+    Week & Eva & Filipe & Pedro\\
+    28 Oct --- 3 Nov & x & x & x\\
+    4 Nov --- 10 Nov & x & x & x\\
+    11 Nov --- 17 Nov & x & x & x\\
+    18 Nov --- 24 Nov & x & x & x\\
+    25 Nov --- 1 Dec & x & x & x\\
+    2 Dec --- 8 Dec & x & x & x\\
+    9 Dec --- 15 Dec & x & x & x\\
+\end{tabular}
+
+%% References (tools, libraries, etc. that will be used in the project. State if each tool has been
+%% found/installed/tested at the time of proposal)
+\section{References}
+
+\end{document}
