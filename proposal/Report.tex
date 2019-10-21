@@ -4,6 +4,7 @@
 \usepackage{a4wide}
 \usepackage[pdftex,hidelinks]{hyperref}
 \usepackage{float}
+\usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{lastpage}
 
@@ -11,14 +12,21 @@
 \fancyhf{}
 
 \rfoot{Page \thepage~of~\pageref{LastPage}}
+\newcommand{\centered}[1]{\begin{tabular}{l} #1 \end{tabular}}
+
 \begin{document}
 
 \title{????????PROJECT NAME????????}
 %todo: Member pictures
 \author{%
-    95145 --- Eva Verboom\\
-    95383 --- Felipe Gorostiaga \\
-    97144 --- Pedro Mendes \\
+    \begin{tabular}{lll}
+        \centered{95145} & \centered{Eva Verboom} &
+        \centered{\includegraphics[height=3cm]{images/eva.jpeg}} \\
+        \centered{95383} & \centered{Felipe Gorostiaga} &
+        \centered{\includegraphics[height=3cm]{example-image-b}} \\
+        \centered{97144} & \centered{Pedro Mendes} &
+        \centered{\includegraphics[height=3cm]{images/pedro.jpg}} \\
+    \end{tabular}
 }
 \date{\today}
 
