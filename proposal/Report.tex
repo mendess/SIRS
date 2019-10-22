@@ -5,9 +5,12 @@
 \usepackage[pdftex,hidelinks]{hyperref}
 \usepackage{float}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{fancyhdr}
+\usepackage{booktabs}
 \usepackage{lastpage}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows,positioning,automata,decorations.markings,shadows,shapes,calc}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -18,7 +21,6 @@
 \begin{document}
 
 \title{????????PROJECT NAME????????}
-%todo: Member pictures
 \author{%
     \begin{tabular}{lll}
         \centered{95145} & \centered{Eva Verboom} &
@@ -55,6 +57,9 @@
 \end{titlepage}
 
 \tableofcontents
+\thispagestyle{empty}
+\newpage
+\setcounter{page}{1}
 
 \pagebreak
 
@@ -62,7 +67,7 @@
 %% being solved? Use around 200 words)
 \section{The Problem}
 
-During this project we will be working on the development of a secure child locator. As a parent,
+During this project we will be working on the development of a secure child locator. As a guardian,
 one might want to track their children to ensure that they aren't straying too far from where they
 are supposed to be and in case something is wrong, to find them. Of course, this is very sensitive
 information, because you do not want malicious actors to be able to track your children and misuse
@@ -82,14 +87,19 @@ The security requirements needed to solve this problem are then:
     \item The system must maintain the confidentially of all data that is classified as confidential;
     \item The system must identify users in a reliable way;
     \item The system must only show data to users if they are authorised to access that particular data;
-    \item The system must not allow anyone to change localisation data;
+    \item The system must not allow anyone to fake localisation data;
+    \item The system must add time-stamps to the location broadcasted by the child's device;
+    \item The system must use secure communication channels to exchange data between the server and the clients;
     \item
 \end{itemize}
 
 %% b. Trust assumptions (Be explicit about trust relationships. Who will be fully trusted,
 %% partially trusted, or untrusted)
 \subsection{Trust Assumptions}
-There are three groups of actors to be distinguished here: the children, the guardians and the external servers. Both children and guardians shall be fully trusted by the system (though only after authentication) and the external servers shall be partially trusted. All other actors that can in some way have access to the data are untrusted parties.
+There are three groups of actors to be distinguished here: the children, the guardians and the
+external servers. Both children and guardians shall be fully trusted by the system (though only
+after authentication) and the external servers shall be partially trusted. All other actors that can
+in some way have access to the data are untrusted parties.
 
 %% Proposed solution (overview with diagram and explanation with around 200 words or less)
 \section{Proposed Solution}
@@ -100,29 +110,40 @@ There are three groups of actors to be distinguished here: the children, the gua
 The system will consist of 3 moving parts:
 
 \begin{itemize}
-    \item A centralised server (may or may not be a distributed system)
-    \item Multiple parent clients
-    \item Multiple child clients
+    \item A centralised server (may or may not be a distributed system);
+    \item Multiple guardian clients;
+    \item Multiple child clients.
 \end{itemize}
 
-To achieve secure communication from the child and parent clients both will require appropriate methods
-of authentication.
+A graphical representation of the machines and the way they are interconnected is shown in
+\autoref{fig:graph}.
 
-\subsubsection{Parent Client}
-The parent will have to establish a public and private key pair with the server to ensure confidentiality
-and a local only password to use the app (maybe also making use of fingerprint scanning).
+\begin{figure}
+    \centering
+    \input{diagram.tex}
+    \caption{Diagram of the System}\label{fig:graph}
+\end{figure}
+
+To achieve secure communication from the child and guardian clients both will require appropriate
+methods of authentication.
+
+\subsubsection{Guardian Client}
+The guardian will have to establish a public and private key pair with the server to ensure
+confidentiality and a local only password to use the app (maybe also making use of fingerprint
+scanning).
 
 \subsubsection{Child Client}
-The child and parent clients need to agree on a private key that only they know, to encrypt every piece of
-data they send to the server. Afterwords the child client also establishes as secure channel with the server.
+The child and guardian clients need to agree on a private key that only they know, to encrypt every
+piece of data they send to the server. Afterwords the child client also establishes as secure
+channel with the server.
 
 %% Secure channel(s) to configure (identify communication entities; existing library/tool to use;
 %% what keys will exist and how will they be distributed)
 \subsection{Secure channels}
-Effectively the entities that will interact in the system are only the child and parent clients,
+Effectively the entities that will interact in the system are only the child and guardian clients,
 the server will only serve remote storage for the data. By using private key encryption for the data
-we ensure confidentiality and integrity of the data and by using public private key pairs for communication
-with the server we ensure authenticity.
+we ensure confidentiality and integrity of the data and by using public private key pairs for
+communication with the server we ensure authenticity.
 
 %% Secure protocol(s) to develop (identify communication entities; language to use for
 %% implementation; what keys will exist and how will they be distributed)
@@ -139,36 +160,41 @@ with the server we ensure authenticity.
 \subsubsection{Minimum Viable Product (MVP)}
 The MVP of our product should consist of the following:
 \begin{itemize}
-    \item Parent accounts which can be authenticated by the server;
-    \item Parents should be able to create accounts for their children;
+    \item Guardian accounts which can be authenticated by the server;
+    \item Guardians should be able to create accounts for their children;
     \item Child clients should be able to localise themselves outdoors;
-    \item A central server that communicates with all clients and authorises guardians to view the tracking data of their children;
-    \item Secure channels for data communication between the server and all clients.
+    \item A central server that communicates with all clients and authorises guardians to view the
+        tracking data of their children;
+    \item Secure channels for data communication between the server and all clients, using library
+        protocols.
 \end{itemize}
 
 \subsubsection{Intermediate}
-
+The intermediate version of our product should include:
 \begin{itemize}
     \item Child clients should also be able to locate themselves indoors;
-    \item Child clients should be able to send alerts, when they press an SOS button or go out of safe zones;
-    \item Parent clients should be able to receive alerts;
-    \item Data should be send encrypted, such that only guardians are able to track the child and the server is unable to know the location.
+    \item Child clients should be able to send alerts, when they press an SOS button or go out of
+        safe zones;
+    \item Guardians should know when a child broadcasted a certain location;
+    \item Guardian clients should be able to receive alerts send by the child and when the child did
+        not broadcast for a certain period of time.
+    \item Allow multiple guardians.
 \end{itemize}
 
-
 \subsubsection{Full Feature Release}
-
-
+Finally, the full feature release will extend the product with:
 \begin{itemize}
     \item Login as a user should be done using two-factor authentication;
-    \item
+    \item Data should be send and stored encrypted, such that only guardians are able to track the
+        child and the server is unable to know the location;
+    \item Provide history of the child's location.
 \end{itemize}
 
 %% Effort commitments (table containing one row per week until the submission date; and one
 %% column per group member with expected activities for the given week; some cells may be left
 %% blank because of work in other courses)
 \subsection{Effort Commitments}
-
+\begin{center}
 \begin{tabular}{llll}
     \toprule
     Week & Eva & Felipe & Pedro\\ \toprule
@@ -180,6 +206,7 @@ The MVP of our product should consist of the following:
     2 Dec --- 8 Dec & x & x & x\\\midrule
     9 Dec --- 15 Dec & x & x & x\\\bottomrule
 \end{tabular}
+\end{center}
 
 %% References (tools, libraries, etc. that will be used in the project. State if each tool has been
 %% found/installed/tested at the time of proposal)
@@ -187,6 +214,8 @@ The MVP of our product should consist of the following:
 The main technology for developing the applications will be the android studio and the built in Java
 encryption libraries (which have been tested at the time of writing this proposal).
 
-For the server we intend to use postgress
+For the server we intend to use Postgres as the database and Rust as the programming language due to
+being a memory safe and perfornat.
 
 \end{document}
+
