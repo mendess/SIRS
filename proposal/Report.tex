@@ -8,6 +8,7 @@
 \usepackage{fancyhdr}
 \usepackage{booktabs}
 \usepackage{lastpage}
+\usepackage{array}
 \usepackage{tikz}
 
 \usetikzlibrary{arrows,positioning,automata,decorations.markings,shadows,shapes,calc}
@@ -20,7 +21,7 @@
 
 \begin{document}
 
-\title{????????PROJECT NAME????????}
+\title{Spy Kid}
 \author{%
     \begin{tabular}{lll}
         \centered{95145} & \centered{Eva Verboom} &
@@ -77,20 +78,22 @@ storage on remote servers. We will tackle the security issues in the same order,
 ensure that the application only allows authorised users to access the information they are allowed
 to access and then we will work on secure communication protocols. When this is ensured, we will
 direct our focus on the servers where the data is stored, assuming that the server is
-``honest-but-curious''.
+``honest but curious''.
 
 %% a. Requirements (Which security requirements were identified for the solution? Present as a list)
 \subsection{Requirements}
 
 The security requirements needed to solve this problem are then:
 \begin{itemize}
-    \item The system must maintain the confidentially of all data that is classified as confidential;
+    \item The system must maintain the confidentially of all data that is classified as
+        confidential;
     \item The system must identify users in a reliable way;
-    \item The system must only show data to users if they are authorised to access that particular data;
+    \item The system must only show data to users if they are authorised to access that particular
+        data;
     \item The system must not allow anyone to fake localisation data;
     \item The system must add time-stamps to the location broadcasted by the child's device;
-    \item The system must use secure communication channels to exchange data between the server and the clients;
-    \item
+    \item The system must use secure communication channels to exchange data between the server and
+        the clients.
 \end{itemize}
 
 %% b. Trust assumptions (Be explicit about trust relationships. Who will be fully trusted,
@@ -127,28 +130,34 @@ A graphical representation of the machines and the way they are interconnected i
 To achieve secure communication from the child and guardian clients both will require appropriate
 methods of authentication.
 
-\subsubsection{Guardian Client}
+%% Secure channel(s) to configure (identify communication entities; existing library/tool to use;
+%% what keys will exist and how will they be distributed)
+\subsection{Secure channels}
+
 The guardian will have to establish a public and private key pair with the server to ensure
 confidentiality and a local only password to use the app (maybe also making use of fingerprint
 scanning).
 
-\subsubsection{Child Client}
 The child and guardian clients need to agree on a private key that only they know, to encrypt every
-piece of data they send to the server. Afterwords the child client also establishes as secure
-channel with the server.
+piece of data they send to the server. In order for the agreement of the keys to not be intercepted
+this agreement has to be made physically, through the scanning of a QR code or other similar method.
 
-%% Secure channel(s) to configure (identify communication entities; existing library/tool to use;
-%% what keys will exist and how will they be distributed)
-\subsection{Secure channels}
-Effectively the entities that will interact in the system are only the child and guardian clients,
-the server will only serve remote storage for the data. By using private key encryption for the data
-we ensure confidentiality and integrity of the data and by using public private key pairs for
-communication with the server we ensure authenticity.
+Afterwards the child client also establishes a secure channel with the server using the same method
+the guardian client uses.
+
 
 %% Secure protocol(s) to develop (identify communication entities; language to use for
 %% implementation; what keys will exist and how will they be distributed)
 \subsection{Secure Protocols}
+Effectively the entities that will interact in the system are only the child and guardian clients,
+the server will only serve safe remote storage for the data. By using public private key pairs for
+communication with the server we ensure authenticity and by using private key encryption for the
+data we ensure confidentiality and integrity of the data, meaning the server can never read the
+sensitive data sent to it.
 
+The other task of the server is to pair guardians with their children making sure that no guardian
+can ever request and get data from a child other than their own, despite the fact that they would
+need to know that child's symmetric key to decrypt the data.
 
 \section{Plan}
 
@@ -194,17 +203,21 @@ Finally, the full feature release will extend the product with:
 %% column per group member with expected activities for the given week; some cells may be left
 %% blank because of work in other courses)
 \subsection{Effort Commitments}
+The table below describes the activities each member of the team commits to during the project. This
+division of tasks is general and all team members also commit to helping each other where needed.
+Changes to the schedule during the project are likely, though every team members holds
+responsibility for his/her own subjects.
 \begin{center}
-\begin{tabular}{llll}
+\begin{tabular}{c m{3.7cm} m{3.7cm} m{3.7cm}}
     \toprule
     Week & Eva & Felipe & Pedro\\ \toprule
-    28 Oct --- 3 Nov & x & x & x\\\midrule
-    4 Nov --- 10 Nov & x & x & x\\\midrule
-    11 Nov --- 17 Nov & x & x & x\\\midrule
-    18 Nov --- 24 Nov & x & x & x\\\midrule
-    25 Nov --- 1 Dec & x & x & x\\\midrule
-    2 Dec --- 8 Dec & x & x & x\\\midrule
-    9 Dec --- 15 Dec & x & x & x\\\bottomrule
+    28/10---3/11 & Basic non secure child client & Basic non secure guardian client & Basic non secure server \\\midrule
+    4/11---10/11 & Basic secure child client and testing & Basic secure guardian client and testing & Basic secure server and testing\\\midrule
+    11/11---17/11 & Intermediate child client & Intermediate guardian client & Intermediate secure server\\\midrule
+    18/11---24/11 & Test intermediate child client & Test intermediate guardian client & Test intermediate secure server\\\midrule
+    25/11---1/12 & Advanced child client and general outlines report & Advanced guardian client & Advanced server\\\midrule
+    2/12---8/12 & Testing final product & Testing final product & Testing final product\\\midrule
+    9/12---15/12 & Finishing report & Finishing report & Finishing report\\\bottomrule
 \end{tabular}
 \end{center}
 
@@ -215,7 +228,7 @@ The main technology for developing the applications will be the android studio a
 encryption libraries (which have been tested at the time of writing this proposal).
 
 For the server we intend to use Postgres as the database and Rust as the programming language due to
-being a memory safe and perfornat.
+being a memory safe and high performing language (which have also been installed and tested to work).
 
 \end{document}
 

@@ -13,11 +13,11 @@
     \node[below right = of Server] (Guardian) [struct]{\textbf{\Large{Guardian}}};
 
     \draw[->, very thick, to path={|- (\tikztotarget)}] (Child.north) to (Server.west)
-    node[above left] {\texttt{location beacons}};
+    node[above left = 0.3cm and 0.1cm] {\texttt{location beacons}};
 
     \draw[->, very thick, to path={|- (\tikztotarget)}] (Guardian.north) to (Server.east)
-    node[above right] {\texttt{child location requests}};
+    node[above right = 0.3cm and 0.1cm] {\texttt{child location requests}};
     \draw[->, very thick, to path={|- (\tikztotarget)}] (Server.south) to (Guardian)
-    node[below right = 2cm and -2cm of Server] {\texttt{child locations}};
+    node[below right = 2cm and -2.1cm of Server] {\texttt{child locations}};
 
 \end{tikzpicture}
