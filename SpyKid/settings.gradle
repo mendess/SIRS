@@ -1,0 +1,2 @@
+include ':guardian', ':child', ':util'
+rootProject.name='SpyKid'
