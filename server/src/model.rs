@@ -9,13 +9,13 @@ use std::{collections::HashMap, sync::Mutex};
 pub use child::ChildId;
 pub use guardian::GuardianId;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Location {
     x: i64,
     y: i64,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Db {
     children: Mutex<HashMap<ChildId, Child>>,
     guardians: Mutex<HashMap<GuardianId, Guardian>>,
@@ -56,7 +56,8 @@ impl Db {
     /// If an attacker gets a hold of the child's phone they can easily add
     /// themselves as a guardian.
     ///
-    /// The easy way to fix this is to allow only one guardian per child.
+    /// New guardians need to have the shared secret first before
+    /// being regitered here.
     pub fn guard_child(&self, child: ChildId, guardian: GuardianId) -> bool {
         self.children
             .lock()

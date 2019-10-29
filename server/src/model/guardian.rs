@@ -22,6 +22,7 @@ impl Display for GuardianId {
 
 static LAST_ID: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Guardian {
     id: GuardianId,
     username: String,

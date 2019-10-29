@@ -23,6 +23,7 @@ impl Display for ChildId {
 
 static LAST_CHILD_ID: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Child {
     id: ChildId,
     guardians: Vec<GuardianId>,
