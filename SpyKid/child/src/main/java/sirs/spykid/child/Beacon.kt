@@ -36,6 +36,7 @@ class Beacon : AsyncTask<Unit, Unit, Unit>() {
 
     private fun getLocation(): Location {
         return Location(r.nextInt(), r.nextInt()) //TODO: How do we get child's location (GPS)
+
     }
 
     override fun doInBackground(vararg params: Unit?) {

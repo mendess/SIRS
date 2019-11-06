@@ -1,6 +1,7 @@
 package sirs.spykid.child
 
 import android.content.*
+import android.location.Location
 import android.os.Bundle
 import android.os.IBinder
 import android.widget.Toast
@@ -27,8 +28,6 @@ class Child : AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            mService = null
-            mBound = false
         }
     }
 
@@ -43,9 +42,9 @@ class Child : AppCompatActivity() {
      */
     private inner class MyReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val location = intent.getParcelableExtra(LocationService.mCurrentLocation)
+            val location = intent.getParcelableExtra<Location>(mService?.EXTRA_LOCATION)
             if (location != null) {
-                Toast.makeText(this@Child, LocationService.getLocationText(location),
+                Toast.makeText(this@Child, mService?.getLocationText(location),
                         Toast.LENGTH_SHORT).show()
             }
         }

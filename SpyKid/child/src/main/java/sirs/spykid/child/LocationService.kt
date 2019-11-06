@@ -17,7 +17,7 @@ import android.os.Binder
 @SuppressLint("Registered")
 class LocationService : Service() {
 
-    private val PACKAGE_NAME =
+    val PACKAGE_NAME =
         "com.google.android.gms.location.sample.locationupdatesforegroundservice"
 
     /**
@@ -33,7 +33,7 @@ class LocationService : Service() {
     private val mBinder = LocalBinder()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var mCurrentLocation : Location
+    lateinit var mCurrentLocation : Location
     private lateinit var locationRequest : LocationRequest
     private var requestingLocationUpdates : Boolean = false
     private lateinit var locationCallback: LocationCallback
@@ -70,8 +70,8 @@ class LocationService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        stopForeground(true);
-        return mBinder;
+        stopForeground(true)
+        return mBinder
     }
 
     /**
@@ -146,6 +146,10 @@ class LocationService : Service() {
         val intent = Intent(ACTION_BROADCAST)
         intent.putExtra(EXTRA_LOCATION, location)
         LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+    }
+
+    fun getLocationText(location: Location): String {
+        return "The current location of your child is " + location.longitude + " longuitude " + location.latitude + " latitude."
     }
 
 
