@@ -1,25 +1,38 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
+mod error;
 mod model;
+mod schema;
+
 #[macro_use]
 extern crate rocket;
+#[macro_use]
+extern crate diesel;
 
-use model::{ChildId, Db, GuardianId, Location};
-use rocket::State;
+use error::Error;
+use model::{Child, ChildId, Db, GuardianId, Location, NewLocation};
+use rocket::{
+    http::RawStr,
+    request::FromParam,
+    State,
+};
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct RegisterGuardianRequest {
     username: String,
-    password: Vec<u8>,
+    password: String,
 }
 
 #[post("/guardian/create", data = "<request>")]
-fn register_guardian(db: State<Db>, request: Json<RegisterGuardianRequest>) -> String {
+fn register_guardian(
+    db: State<Db>,
+    request: Json<RegisterGuardianRequest>,
+) -> Result<String, Error> {
     let request = request.into_inner();
     db.register_new_guardian(request.username, request.password)
-        .to_string()
+        .map(|i| i.to_string())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,35 +42,35 @@ struct GetChildLocation {
 }
 
 #[post("/guardian", data = "<request>")]
-fn where_is_my_child(db: State<Db>, request: Json<GetChildLocation>) -> Option<Json<Location>> {
+fn where_is_my_child(
+    db: State<Db>,
+    request: Json<GetChildLocation>,
+) -> Result<Option<Json<Location>>, Error> {
     db.child_location(request.child, request.guardian)
-        .map(|l| Json(l))
+        .map(|mut l| l.pop().map(|i| Json(i)))
+}
+
+#[get("/guardian/<guardian>")]
+fn list_children(db: State<Db>, guardian: GuardianId) -> Result<Json<Vec<Child>>, Error> {
+    db.list_children(guardian).map(|c| Json(c))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct RegisterChild {
     guardian: GuardianId,
+    username: String,
 }
 
 #[post("/child/create", data = "<request>")]
-fn register_child(db: State<Db>, request: Json<RegisterChild>) -> String {
-    db.register_new_child(request.guardian).to_string()
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ChildLocation {
-    location: Location,
-    child: ChildId,
+fn register_child(db: State<Db>, request: Json<RegisterChild>) -> Result<String, Error> {
+    let request = request.into_inner();
+    db.register_new_child(request.username, request.guardian)
+        .map(|i| i.to_string())
 }
 
 #[post("/child", data = "<request>")]
-fn update_child_location(db: State<Db>, request: Json<ChildLocation>) {
-    db.update_child_location(request.child, request.location)
-}
-
-#[get("/state")]
-fn print_state(db: State<Db>) -> String {
-    format!("{:#?}", db)
+fn update_child_location(db: State<Db>, request: Json<NewLocation>) -> Result<(), Error> {
+    db.update_child_location(request.into_inner())
 }
 
 fn main() {
@@ -69,9 +82,17 @@ fn main() {
                 register_guardian,
                 register_child,
                 update_child_location,
-                print_state,
+                list_children,
             ],
         )
         .manage(Db::default())
         .launch();
+}
+
+impl<'r> FromParam<'r> for GuardianId {
+    type Error = &'r RawStr;
+
+    fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
+        i32::from_param(param).map(GuardianId::from)
+    }
 }

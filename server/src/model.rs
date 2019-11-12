@@ -1,69 +1,183 @@
 mod child;
 mod guardian;
+mod location;
 
-use child::Child;
-use guardian::Guardian;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Mutex};
-
-pub use child::ChildId;
+pub use child::{Child, ChildId};
 pub use guardian::GuardianId;
+pub use location::{Location, NewLocation};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub struct Location {
-    x: i64,
-    y: i64,
-}
+use super::schema::{children, guardian_has_children, guardians, locations};
+use crate::error::{Error, Result};
+use diesel::{pg::PgConnection, prelude::*, Associations, Identifiable, Insertable, Queryable};
+use guardian::Guardian;
+use location::LocationInternal;
+use std::sync::Mutex;
 
-#[derive(Default, Debug)]
-pub struct Db {
-    children: Mutex<HashMap<ChildId, Child>>,
-    guardians: Mutex<HashMap<GuardianId, Guardian>>,
+pub struct Db(Mutex<PgConnection>);
+
+impl Default for Db {
+    fn default() -> Self {
+        dotenv::dotenv().ok();
+        let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        PgConnection::establish(&db_url)
+            .map(|c| Db(Mutex::new(c)))
+            .expect(&format!("Error connecting to {}", db_url))
+    }
 }
 
 impl Db {
-    pub fn register_new_guardian(&self, username: String, password: Vec<u8>) -> GuardianId {
-        let new = Guardian::new(username, password);
-        let id = new.id();
-        self.guardians.lock().unwrap().insert(id, new);
-        id
+    pub fn register_new_guardian(&self, username: String, password: String) -> Result<GuardianId> {
+        #[derive(Insertable)]
+        #[table_name = "guardians"]
+        struct NewGuardian<'a> {
+            pub username: &'a str,
+            pub password: &'a str,
+        }
+
+        let new_guardian = NewGuardian {
+            username: &username,
+            password: &password,
+        };
+        diesel::insert_into(guardians::table)
+            .values(&new_guardian)
+            .get_result(&*self.0.lock().unwrap())
+            .map(|g: Guardian| GuardianId(g.id))
+            .map_err(|e| {
+                eprintln!("Error in Db::register_new_guardian: {}", e);
+                use diesel::result::DatabaseErrorKind;
+                use diesel::result::Error as DBError;
+                match e {
+                    DBError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+                        Error::AlreadyGuarding
+                    }
+                    _ => Error::Other,
+                }
+            })
     }
 
-    pub fn register_new_child(&self, guardian: GuardianId) -> ChildId {
-        let new = Child::new(guardian);
-        let id = new.id();
-        self.children.lock().unwrap().insert(id, new);
-        id
+    pub fn register_new_child(&self, username: String, guardian_id: GuardianId) -> Result<ChildId> {
+        #[derive(Insertable)]
+        #[table_name = "children"]
+        struct NewChild<'a> {
+            pub username: &'a str,
+        }
+        let guardian_id = guardian_id.0;
+        let conn = self.0.lock().unwrap();
+        conn.transaction(|| {
+            let child_id = diesel::insert_into(children::table)
+                .values(&NewChild {
+                    username: &username,
+                })
+                .get_result::<Child>(&*conn)?
+                .id;
+            diesel::insert_into(guardian_has_children::table)
+                .values(&GuardianHasChildren {
+                    child_id,
+                    guardian_id,
+                })
+                .execute(&*conn)?;
+            Ok(ChildId(child_id))
+        })
+        .map_err(|e| {
+            eprintln!("Error in Db::register_new_child: {}", e);
+            use diesel::result::DatabaseErrorKind;
+            use diesel::result::Error as DBError;
+            match e {
+                DBError::DatabaseError(DatabaseErrorKind::ForeignKeyViolation, _) => {
+                    Error::InvalidGuardian
+                }
+                DBError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+                    Error::AlreadyGuarding
+                }
+                _ => Error::Other,
+            }
+        })
     }
 
-    pub fn child_location(&self, child: ChildId, guardian: GuardianId) -> Option<Location> {
-        self.children
-            .lock()
-            .unwrap()
-            .get(&child)
-            .and_then(|c| c.location(guardian))
+    pub fn update_child_location(&self, location: NewLocation) -> Result<()> {
+        diesel::insert_into(locations::table)
+            .values(&location)
+            .execute(&*self.0.lock().unwrap())
+            .map(|_| ())
+            .map_err(|e| {
+                eprintln!("Error in Db::update_child_location: {:?}", e);
+                // use diesel::result::DatabaseErrorKind;
+                // use diesel::result::Error as DBError;
+                match e {
+                    _ => Error::Other,
+                }
+            })
     }
 
-    pub fn update_child_location(&self, child: ChildId, location: Location) {
-        self.children
-            .lock()
-            .unwrap()
-            .get_mut(&child)
-            .map(|c| c.update_location(location));
+    pub fn child_location(&self, child: ChildId, guardian: GuardianId) -> Result<Vec<Location>> {
+        guardian_has_children::table
+            .filter(guardian_has_children::guardian_id.eq(guardian.0))
+            .filter(guardian_has_children::child_id.eq(child.0))
+            .select(guardian_has_children::child_id)
+            .inner_join(
+                locations::table.on(guardian_has_children::child_id.eq(locations::child_id)),
+            )
+            .select((
+                locations::id,
+                locations::child_id,
+                locations::latitude,
+                locations::longitude,
+            ))
+            .load::<LocationInternal>(&*self.0.lock().unwrap())
+            .map(|v| v.into_iter().map(Location::from).collect())
+            .map_err(|e| {
+                eprintln!("Error in Db::child_location-1: {:?}", e);
+                use diesel::result::Error as DBError;
+                match e {
+                    DBError::NotFound => Error::InvalidChildOrGuardian,
+                    _ => Error::Other,
+                }
+            })
     }
 
-    /// This is an angle of attack
-    /// If an attacker gets a hold of the child's phone they can easily add
-    /// themselves as a guardian.
-    ///
-    /// New guardians need to have the shared secret first before
-    /// being regitered here.
-    pub fn guard_child(&self, child: ChildId, guardian: GuardianId) -> bool {
-        self.children
-            .lock()
-            .unwrap()
-            .get_mut(&child)
-            .map(|c| c.add_guardian(guardian))
-            .is_some()
+    pub fn guard_child(&self, child: ChildId, guardian: GuardianId) -> Result<()> {
+        diesel::insert_into(guardian_has_children::table)
+            .values(&GuardianHasChildren {
+                child_id: child.0,
+                guardian_id: guardian.0,
+            })
+            .execute(&*self.0.lock().unwrap())
+            .map(|_| ())
+            .map_err(|e| {
+                eprintln!("Error in Db::guard_child: {:?}", e);
+                use diesel::result::DatabaseErrorKind;
+                use diesel::result::Error as DBError;
+                match e {
+                    DBError::DatabaseError(DatabaseErrorKind::ForeignKeyViolation, _) => {
+                        Error::InvalidGuardian
+                    }
+                    DBError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+                        Error::AlreadyGuarding
+                    }
+                    _ => Error::Other,
+                }
+            })
     }
+
+    pub fn list_children(&self, guardian: GuardianId) -> Result<Vec<Child>> {
+        guardian_has_children::table
+            .filter(guardian_has_children::guardian_id.eq(guardian.0))
+            .inner_join(children::table)
+            .select((children::id, children::username))
+            .load::<Child>(&*self.0.lock().unwrap())
+            .map_err(|e| {
+                eprintln!("Error in Db::list_children: {:?}", e);
+                Error::Other
+            })
+    }
+}
+
+#[derive(Insertable, Identifiable, Queryable, Associations)]
+#[table_name = "guardian_has_children"]
+#[belongs_to(Child, table_name = "children")]
+#[belongs_to(Guardian)]
+#[primary_key(guardian_id, child_id)]
+struct GuardianHasChildren {
+    pub guardian_id: i32,
+    pub child_id: i32,
 }

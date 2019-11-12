@@ -1,18 +1,18 @@
+use crate::schema::guardians;
+use diesel::{Identifiable, Queryable};
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{self, Display},
-    sync::atomic::{AtomicU64, Ordering},
-};
+use std::fmt::{self, Display};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct GuardianId(u64);
-
-impl From<u64> for GuardianId {
-    fn from(u: u64) -> Self {
-        Self(u)
-    }
+#[derive(Identifiable, Queryable)]
+pub struct Guardian {
+    pub id: i32,
+    pub username: String,
+    pub password: String,
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
+#[serde(transparent)]
+pub struct GuardianId(pub i32);
 
 impl Display for GuardianId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -20,25 +20,8 @@ impl Display for GuardianId {
     }
 }
 
-static LAST_ID: AtomicU64 = AtomicU64::new(0);
-
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub struct Guardian {
-    id: GuardianId,
-    username: String,
-    password: Vec<u8>,
-}
-
-impl Guardian {
-    pub fn new(username: String, password: Vec<u8>) -> Self {
-        Self {
-            id: LAST_ID.fetch_add(1, Ordering::SeqCst).into(),
-            username,
-            password,
-        }
-    }
-
-    pub fn id(&self) -> GuardianId {
-        self.id
+impl From<i32> for GuardianId {
+    fn from(i: i32) -> GuardianId {
+        GuardianId(i)
     }
 }
