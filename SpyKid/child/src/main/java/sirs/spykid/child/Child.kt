@@ -4,10 +4,13 @@ import android.content.*
 import android.location.Location
 import android.os.Bundle
 import android.os.IBinder
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import sirs.spykid.child.Beacon as ChildBeacon
 
 class Child : AppCompatActivity() {
+
+    // Beacon of the child
+    private lateinit var mBeacon: ChildBeacon
 
     // The BroadcastReceiver used to listen from broadcasts from the service.
     private var myReceiver: MyReceiver? = null
@@ -35,6 +38,18 @@ class Child : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         myReceiver = MyReceiver()
         setContentView(R.layout.activity_child)
+        // Create beacon
+        mBeacon = ChildBeacon()
+        mBeacon.register()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (mService != null) {
+            if (mService?.requestingLocationUpdates!!) {
+                mService?.startLocationUpdates()
+            }
+        }
     }
 
     /**
@@ -44,8 +59,7 @@ class Child : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             val location = intent.getParcelableExtra<Location>(mService?.EXTRA_LOCATION)
             if (location != null) {
-                Toast.makeText(this@Child, mService?.getLocationText(location),
-                        Toast.LENGTH_SHORT).show()
+                mBeacon.updateLocation(location)
             }
         }
     }

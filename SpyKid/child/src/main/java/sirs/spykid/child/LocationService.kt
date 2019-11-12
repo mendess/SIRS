@@ -35,7 +35,7 @@ class LocationService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     lateinit var mCurrentLocation : Location
     private lateinit var locationRequest : LocationRequest
-    private var requestingLocationUpdates : Boolean = false
+    var requestingLocationUpdates : Boolean = false
     private lateinit var locationCallback: LocationCallback
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
@@ -122,7 +122,7 @@ class LocationService : Service() {
         return locationRequest
     }
 
-    private fun startLocationUpdates() {
+    fun startLocationUpdates() {
         fusedLocationClient.requestLocationUpdates(locationRequest,
                 locationCallback,
                 Looper.getMainLooper())

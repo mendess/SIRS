@@ -1,14 +1,13 @@
 package sirs.spykid.child
 
+import android.location.Location
 import android.os.AsyncTask
-import sirs.spykid.util.Location
 import java.io.*
 import java.net.URL
-import kotlin.random.Random
 
 class Beacon : AsyncTask<Unit, Unit, Unit>() {
 
-    private val r = Random(10)
+    private lateinit var mLocation : Location
 
     fun register() {
         val url = URL("http://localhost:8000/child/create")
@@ -27,7 +26,7 @@ class Beacon : AsyncTask<Unit, Unit, Unit>() {
             println("opening connection")
             val connection = url.openConnection()
             connection.doOutput = true
-            connection.getOutputStream().write("{ \"child\": 0, \"location\": ${getLocation().asJson()}}".toByteArray())
+            connection.getOutputStream().write("{ \"child\": 0, \"location\": ${getLocation()}}".toByteArray()) //TODO: make sure location is sent properly
             connection.connect()
             println(BufferedInputStream(connection.getInputStream()).reader().readText())
             Thread.sleep(1000)
@@ -35,8 +34,11 @@ class Beacon : AsyncTask<Unit, Unit, Unit>() {
     }
 
     private fun getLocation(): Location {
-        return Location(r.nextInt(), r.nextInt()) //TODO: How do we get child's location (GPS)
+        return mLocation
+    }
 
+    fun updateLocation(location: Location) {
+        mLocation = location
     }
 
     override fun doInBackground(vararg params: Unit?) {
