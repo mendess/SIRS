@@ -101,6 +101,7 @@ class LocationService : Service() {
             if (exception is ResolvableApiException){
                 // Location settings are not satisfied, but this can be fixed
                 // by showing the user a dialog.
+                print("Loacation settings are not satisfied")
                 try {
                     // Show the dialog by calling startResolutionForResult(),
                     // and check the result in onActivityResult().
