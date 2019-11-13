@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "82062997355",
+    "firebase_url": "https://sirs-guardian.firebaseio.com",
+    "project_id": "sirs-guardian",
+    "storage_bucket": "sirs-guardian.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82062997355:android:a0925a7d967d760f8f3e2e",
+        "android_client_info": {
+          "package_name": "com.sirs.guardianapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "82062997355-rkg2toak0sglrtgr43k1666gt9mjpnsi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sirs.guardianapp",
+            "certificate_hash": "79187b01e963a40ddadf970badc967f5900826fe"
+          }
+        },
+        {
+          "client_id": "82062997355-ukham4c78mk4n8djpt47o2iktubgg4nn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaetkjCMr_-W1GfldlA_nkXeBw9cdMlok"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82062997355-ukham4c78mk4n8djpt47o2iktubgg4nn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
