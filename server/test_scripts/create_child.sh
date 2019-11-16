@@ -10,6 +10,5 @@ curl --header "Content-Type: application/json" \
   -w " : %{http_code}" \
   --request POST \
   --data '{"guardian":'"$1"',"username":"'"$2"'"}' \
-  http://localhost:8000/child/create \
-  | jq
+  http://"${IP:-localhost}":8000/child/create
 echo
