@@ -10,6 +10,6 @@ curl --header "Content-Type: application/json" \
   -w " : %{http_code}" \
   --request POST \
   --data '{"child_id":'"$1"',"latitude":'"${2:-$RANDOM}"', "longitude": '"${3:-$RANDOM}"'}' \
-  http://"${IP:-localhost}":8000/child \
+  http://"${IP:-localhost}":6894/child \
   | cat
 echo

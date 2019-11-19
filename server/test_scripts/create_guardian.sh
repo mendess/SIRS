@@ -9,5 +9,5 @@ curl --header "Content-Type: application/json" \
   -w " : %{http_code}" \
   --request POST \
   --data '{"username":"'"$1"'","password":"'"$2"'"}' \
-  http://"${IP:-localhost}":8000/guardian/create
+  http://"${IP:-localhost}":6894/guardian/create
 echo

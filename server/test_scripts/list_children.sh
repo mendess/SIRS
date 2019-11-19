@@ -6,5 +6,5 @@ then
     exit 1
 fi
 
-curl http://"${IP:-localhost}":8000/guardian/"$1" | jq
+curl http://"${IP:-localhost}":6894/guardian/"$1" | jq
 echo
