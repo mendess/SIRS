@@ -1,0 +1,14 @@
+[global]
+port = 6894
+
+[development]
+address = "localhost"
+keep_alive = 5
+log = "debug"
+limits = { forms = 32768 }
+
+[production]
+address = "0.0.0.0"
+keep_alive = 5
+log = "debug"
+limits = { forms = 32768 }
