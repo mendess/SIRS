@@ -1,6 +1,5 @@
 package com.sirs.guardianapp;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AuthUI.IdpConfig> providers;
     private static final int MY_REQUEST_CODE = 7117;
-    private Button btn_sign_out;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //Sign Out Button
-        btn_sign_out = (Button)findViewById(R.id.btn_sign_out);
+       /* btn_sign_out = (Button)findViewById(R.id.btn_sign_out);
         btn_sign_out.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -55,16 +53,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
-        });
-
-
+        });*/
         //Initialize providers... add more if needed
         providers = Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build());
-
         showSignInOptions();
-
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -73,24 +66,19 @@ public class MainActivity extends AppCompatActivity {
             IdpResponse idpResponse = IdpResponse.fromResultIntent(data);
 
             if(resultCode == RESULT_OK) {
-
                 //Get User
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 Toast.makeText(this, "" + user.getEmail(), Toast.LENGTH_SHORT).show();
 
                 //Switch to Menu Activity
-                //Intent intent = new Intent(this, MenuActivity.class);
-                //startActivity(intent);
-                
-                //Set Button signOut
-                btn_sign_out.setEnabled(true);
+                Intent intent = new Intent(this, MenuActivity.class);
+                startActivity(intent);
 
             }
             else {
                 Toast.makeText(this, "" + idpResponse.getError().getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
-
     }
 
     private void showSignInOptions() {
@@ -101,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
                 .setTheme(R.style.MyTheme)
                 .build(), MY_REQUEST_CODE);
     }
-
 }
 
 

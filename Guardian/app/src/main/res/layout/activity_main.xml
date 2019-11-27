@@ -6,12 +6,4 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SignOut"
-        android:layout_centerInParent="true"
-        android:enabled="false"
-        android:id="@+id/btn_sign_out"/>
-
 </RelativeLayout>
