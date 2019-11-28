@@ -1,5 +1,6 @@
 package com.sirs.guardianapp;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -26,37 +27,24 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AuthUI.IdpConfig> providers;
     private static final int MY_REQUEST_CODE = 7117;
+    Button buttonSignIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Sign Out Button
-       /* btn_sign_out = (Button)findViewById(R.id.btn_sign_out);
-        btn_sign_out.setOnClickListener(new View.OnClickListener() {
+        //Initialize providers
+        providers = Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build());
+
+        //Sign In Button
+        buttonSignIn = (Button)findViewById(R.id.btn_sign_in);
+        buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Logout
-                AuthUI.getInstance()
-                        .signOut(MainActivity.this)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                btn_sign_out.setEnabled(false);
-                                showSignInOptions();
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                showSignInOptions();
             }
-        });*/
-        //Initialize providers... add more if needed
-        providers = Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build());
-        showSignInOptions();
+        });
     }
 
     @Override
