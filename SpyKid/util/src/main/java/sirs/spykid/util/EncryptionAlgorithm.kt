@@ -88,12 +88,15 @@ class EncryptionAlgorithm {
 @RequiresApi(Build.VERSION_CODES.O)
 class Session(host: String, port: Int) {
     companion object {
-        lateinit var session: Session
+        private lateinit var session: Session
+        private val monitor = Object()
         fun <T : Requests.ToJson> request(message: T): String {
-            if (!::session.isInitialized) {
-                session = Session("localhost", 6894)
+            synchronized(monitor) {
+                if (!::session.isInitialized) {
+                    session = Session("localhost", 6894)
+                }
+                return session.request(message.toJson())
             }
-            return session.request(message.toJson())
         }
     }
 

@@ -1,12 +1,18 @@
 package sirs.spykid.guardian
 
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import sirs.spykid.util.RegisterGuardian
 
+@RequiresApi(Build.VERSION_CODES.N)
 class Guardian : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // Example usage or ServerApi
+        val id = RegisterGuardian().execute(Pair("user", "pass"))
     }
 }

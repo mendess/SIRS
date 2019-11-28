@@ -138,7 +138,7 @@ class UpdateChildLocation :
 class Responses {
     class RegisterGuardian private constructor(val guardianId: GuardianId) {
         companion object {
-            fun fromJson(json: JsonElement): RegisterGuardian =
+            internal fun fromJson(json: JsonElement): RegisterGuardian =
                 RegisterGuardian(
                     GuardianId(
                         json.asJsonObject.get("RegisterGuardian").asJsonObject.get(
@@ -151,7 +151,7 @@ class Responses {
 
     class RegisterChild private constructor(val childId: ChildId) {
         companion object {
-            fun fromJson(json: JsonElement): RegisterChild =
+            internal fun fromJson(json: JsonElement): RegisterChild =
                 RegisterChild(
                     ChildId(
                         json.asJsonObject.get("RegisterChild").asJsonObject.get(
@@ -164,7 +164,7 @@ class Responses {
 
     class ChildLocation private constructor(val locations: List<Location>) {
         companion object {
-            fun fromJson(json: JsonElement): ChildLocation =
+            internal fun fromJson(json: JsonElement): ChildLocation =
                 ChildLocation(
                     json.asJsonObject.get("ChildLocation").asJsonObject.get(
                         "locations"
@@ -175,7 +175,7 @@ class Responses {
 
     class ListChildren private constructor(val children: List<Child>) {
         companion object {
-            fun fromJson(json: JsonElement): ListChildren =
+            internal fun fromJson(json: JsonElement): ListChildren =
                 ListChildren(
                     json.asJsonObject.get("ListChildren").asJsonObject.get("children").asJsonArray.map { s -> s.asJsonObject }.map { s ->
                         Child(
@@ -190,7 +190,7 @@ class Responses {
 
     class UpdateChildLocation private constructor() {
         companion object {
-            fun fromJson(json: JsonElement): UpdateChildLocation {
+            internal fun fromJson(json: JsonElement): UpdateChildLocation {
                 assert(json.asString == "UpdateChildLocation") { json.asString }
                 return UpdateChildLocation()
             }
