@@ -4,7 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import sirs.spykid.util.RegisterGuardian
+import sirs.spykid.util.registerGuardian
 
 @RequiresApi(Build.VERSION_CODES.N)
 class Guardian : AppCompatActivity() {
@@ -13,6 +13,6 @@ class Guardian : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         // Example usage or ServerApi
-        val id = RegisterGuardian().execute(Pair("user", "pass"))
+        val id = registerGuardian("user", "pass")
     }
 }

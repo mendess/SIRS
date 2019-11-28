@@ -8,7 +8,7 @@ mod schema;
 extern crate diesel;
 
 use error::Error;
-use model::{Child, ChildId, Db, GuardianId, Location};
+use model::{ChildId, ChildView, Db, GuardianId, Location};
 use openssl::symm::{self, Cipher};
 use rand::{distributions::Standard, rngs::StdRng, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -34,6 +34,11 @@ enum Request {
     RegisterChild {
         guardian: GuardianId,
         username: String,
+        password: String,
+    },
+    LoginChild {
+        username: String,
+        password: String,
     },
     ChildLocation {
         guardian: GuardianId,
@@ -53,8 +58,9 @@ enum Response {
     RegisterGuardian { id: GuardianId },
     LoginGuardian { id: GuardianId },
     RegisterChild { id: ChildId },
+    LoginChild { id: ChildId },
     ChildLocation { locations: Vec<String> },
-    ListChildren { children: Vec<Child> },
+    ListChildren { children: Vec<ChildView> },
     UpdateChildLocation,
 }
 
@@ -77,9 +83,14 @@ impl Request {
             RegisterChild {
                 guardian: g,
                 username: u,
+                password: p,
             } => db
-                .register_new_child(u, g)
+                .register_new_child(u, p, g)
                 .map(|id| R::RegisterChild { id }),
+            LoginChild {
+                username: u,
+                password: p,
+            } => db.login_child(u, p).map(|id| R::LoginChild { id }),
             ChildLocation {
                 guardian: g,
                 child: c,
@@ -210,6 +221,7 @@ fn show_api() {
     let r = Request::RegisterChild {
         guardian: 1.into(),
         username: "child".into(),
+        password: "passchild".into(),
     };
     println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
     let r = Response::RegisterChild { id: 1.into() };
@@ -229,12 +241,12 @@ fn show_api() {
     println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
     let r = Response::ListChildren {
         children: vec![
-            Child {
-                id: 1,
+            ChildView {
+                id: 1.into(),
                 username: "child1".into(),
             },
-            Child {
-                id: 2,
+            ChildView {
+                id: 2.into(),
                 username: "child2".into(),
             },
         ],

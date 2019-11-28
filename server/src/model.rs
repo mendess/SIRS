@@ -2,7 +2,7 @@ mod child;
 mod guardian;
 mod location;
 
-pub use child::{Child, ChildId};
+pub use child::{ChildView, Child, ChildId};
 pub use guardian::GuardianId;
 pub use location::Location;
 
@@ -72,11 +72,12 @@ impl Db {
             })
     }
 
-    pub fn register_new_child(&self, username: String, guardian_id: GuardianId) -> Result<ChildId> {
+    pub fn register_new_child(&self, username: String, password: String, guardian_id: GuardianId) -> Result<ChildId> {
         #[derive(Insertable)]
         #[table_name = "children"]
         struct NewChild<'a> {
             pub username: &'a str,
+            pub password: &'a str,
         }
         let guardian_id = guardian_id.0;
         let conn = self.0.lock().unwrap();
@@ -84,16 +85,17 @@ impl Db {
             let child_id = diesel::insert_into(children::table)
                 .values(&NewChild {
                     username: &username,
+                    password: &password,
                 })
                 .get_result::<Child>(&*conn)?
                 .id;
             diesel::insert_into(guardian_has_children::table)
                 .values(&GuardianHasChildren {
-                    child_id,
+                    child_id: child_id.0,
                     guardian_id,
                 })
                 .execute(&*conn)?;
-            Ok(ChildId(child_id))
+            Ok(child_id)
         })
         .map_err(|e| {
             eprintln!("Error in Db::register_new_child: {}", e);
@@ -109,6 +111,23 @@ impl Db {
                 _ => Error::Other,
             }
         })
+    }
+
+    pub fn login_child(&self, username: String, password: String) -> Result<ChildId> {
+        children::table
+            .filter(children::username.eq(username))
+            .filter(children::password.eq(password))
+            .select(children::id)
+            .first::<i32>(&*self.0.lock().unwrap())
+            .map(ChildId::from)
+            .map_err(|e| {
+                eprintln!("Error in Db::login_guardian: {:?}", e);
+                use diesel::result::Error as DBError;
+                match e {
+                    DBError::NotFound => Error::InvalidUsernameOrPassword,
+                    _ => Error::Other,
+                }
+            })
     }
 
     pub fn update_child_location(&self, location: Location) -> Result<()> {
@@ -171,12 +190,12 @@ impl Db {
             })
     }
 
-    pub fn list_children(&self, guardian: GuardianId) -> Result<Vec<Child>> {
+    pub fn list_children(&self, guardian: GuardianId) -> Result<Vec<ChildView>> {
         guardian_has_children::table
             .filter(guardian_has_children::guardian_id.eq(guardian.0))
             .inner_join(children::table)
             .select((children::id, children::username))
-            .load::<Child>(&*self.0.lock().unwrap())
+            .load::<ChildView>(&*self.0.lock().unwrap())
             .map_err(|e| {
                 eprintln!("Error in Db::list_children: {:?}", e);
                 Error::Other

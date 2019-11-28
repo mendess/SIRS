@@ -2,6 +2,7 @@ table! {
     children (id) {
         id -> Int4,
         username -> Varchar,
+        password -> Varchar,
     }
 }
 
@@ -32,4 +33,9 @@ joinable!(guardian_has_children -> children (child_id));
 joinable!(guardian_has_children -> guardians (guardian_id));
 joinable!(locations -> children (child_id));
 
-allow_tables_to_appear_in_same_query!(children, guardian_has_children, guardians, locations,);
+allow_tables_to_appear_in_same_query!(
+    children,
+    guardian_has_children,
+    guardians,
+    locations,
+);
