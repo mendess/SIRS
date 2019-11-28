@@ -14,6 +14,12 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun login() {
+        RegisterGuardian.register("Mendes", "rust").unwrap()
+        LoginGuardian.login("Mendes", "rust").unwrap()
+    }
+
+    @Test
     fun registerChild() {
         val gid = RegisterGuardian.register("Pedro", "linux").unwrap()
         RegisterChild.registerChild(gid.guardianId, "child1").unwrap()

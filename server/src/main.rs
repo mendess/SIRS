@@ -27,6 +27,10 @@ enum Request {
         username: String,
         password: String,
     },
+    LoginGuardian {
+        username: String,
+        password: String,
+    },
     RegisterChild {
         guardian: GuardianId,
         username: String,
@@ -47,6 +51,7 @@ enum Request {
 #[derive(Serialize, Deserialize)]
 enum Response {
     RegisterGuardian { id: GuardianId },
+    LoginGuardian { id: GuardianId },
     RegisterChild { id: ChildId },
     ChildLocation { locations: Vec<String> },
     ListChildren { children: Vec<Child> },
@@ -65,6 +70,10 @@ impl Request {
             } => db
                 .register_new_guardian(u, p)
                 .map(|id| R::RegisterGuardian { id }),
+            LoginGuardian {
+                username: u,
+                password: p,
+            } => db.login_guardian(u, p).map(|id| R::LoginGuardian { id }),
             RegisterChild {
                 guardian: g,
                 username: u,
@@ -136,7 +145,10 @@ impl Session {
             &payload,
         )?;
         eprintln!("payload: {}", std::str::from_utf8(&thing).unwrap());
-        Ok(serde_json::from_slice(&thing).map_err(|e| { eprintln!("Wut?"); e })?)
+        Ok(serde_json::from_slice(&thing).map_err(|e| {
+            eprintln!("Wut?");
+            e
+        })?)
     }
 
     fn write_response(&mut self, response: Result<Response, Error>) -> Result<(), io::Error> {

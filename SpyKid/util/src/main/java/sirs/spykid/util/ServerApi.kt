@@ -11,8 +11,8 @@ import java.util.*
 
 // ====== Public API ======
 
-data class GuardianId(val id: Int)
-data class ChildId(val id: Int)
+data class GuardianId(internal val id: Int)
+data class ChildId(internal val id: Int)
 data class Child(val id: ChildId, val username: String)
 
 class Location(val x: Double, val y: Double) {
@@ -47,6 +47,26 @@ class RegisterGuardian :
             params[0].first,
             params[0].second
         )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.N)
+class LoginGuardian :
+    AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginGuardian, Responses.Error>>() {
+    companion object {
+        internal fun login(
+            username: String,
+            password: String
+        ): Result<Responses.LoginGuardian, Responses.Error> {
+            return resultFromJson(Session.request(Requests.LoginGuardian(username, password)))
+                .map { Responses.LoginGuardian.fromJson(it) }
+                .mapErr { Responses.errorFromJson(it) }
+        }
+    }
+
+    override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.LoginGuardian, Responses.Error> {
+        assert(params.isNotEmpty())
+        return login(params[0].first, params[1].second)
     }
 
 }
@@ -149,6 +169,16 @@ class Responses {
         }
     }
 
+    class LoginGuardian private constructor(val guardianId: GuardianId) {
+        companion object {
+            internal fun fromJson(json: JsonElement): LoginGuardian =
+                LoginGuardian(
+                    GuardianId(json.asJsonObject.get("LoginGuardian").asJsonObject.get("id").asInt)
+                )
+        }
+
+    }
+
     class RegisterChild private constructor(val childId: ChildId) {
         companion object {
             internal fun fromJson(json: JsonElement): RegisterChild =
@@ -240,7 +270,7 @@ internal class Requests {
         fun toJson(): String
     }
 
-    internal class RegisterGuardian(val username: String, val password: String) : ToJson {
+    internal class RegisterGuardian(private val username: String, private val password: String) : ToJson {
         override fun toJson(): String {
             val innerJson = JsonObject()
             innerJson.add("username", JsonPrimitive(username))
@@ -251,7 +281,18 @@ internal class Requests {
         }
     }
 
-    internal class RegisterChild(val guardian: GuardianId, val username: String) : ToJson {
+    class LoginGuardian(private val username: String, private val password: String) : ToJson {
+        override fun toJson(): String {
+            val innerJson = JsonObject()
+            innerJson.add("username", JsonPrimitive(username))
+            innerJson.add("password", JsonPrimitive(password))
+            val json = JsonObject()
+            json.add("LoginGuardian", innerJson)
+            return json.toString()
+        }
+    }
+
+    internal class RegisterChild(private val guardian: GuardianId, private val username: String) : ToJson {
         override fun toJson(): String {
             val innerJson = JsonObject()
             innerJson.add("guardian", JsonPrimitive(guardian.id))
@@ -262,7 +303,7 @@ internal class Requests {
         }
     }
 
-    internal class ChildLocation(val guardian: GuardianId, val child: ChildId) : ToJson {
+    internal class ChildLocation(private val guardian: GuardianId, val child: ChildId) : ToJson {
         override fun toJson(): String {
             val innerJson = JsonObject()
             innerJson.add("guardian", JsonPrimitive(guardian.id))
@@ -273,7 +314,7 @@ internal class Requests {
         }
     }
 
-    internal class ListChildren(val guardian: GuardianId) : ToJson {
+    internal class ListChildren(private val guardian: GuardianId) : ToJson {
         override fun toJson(): String {
             val innerJson = JsonObject()
             innerJson.add("guardian", JsonPrimitive(guardian.id))
@@ -284,7 +325,7 @@ internal class Requests {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    internal class UpdateChildLocation(val child: ChildId, val location: Location) : ToJson {
+    internal class UpdateChildLocation(private val child: ChildId, private val location: Location) : ToJson {
         override fun toJson(): String {
             val innerJson = JsonObject()
             innerJson.add("child", JsonPrimitive(child.id))
@@ -297,5 +338,6 @@ internal class Requests {
             return json.toString()
         }
     }
+
 }
 

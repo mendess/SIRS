@@ -26,7 +26,7 @@ class EncryptionAlgorithm {
     @Throws(Exception::class)
     fun generateSecretKey(keystoreAlias: String): KeyStore {
         val androidKeyStore = "AndroidKeyStore"
-        var keyStore = KeyStore.getInstance(androidKeyStore)
+        val keyStore = KeyStore.getInstance(androidKeyStore)
         keyStore.load(null)
 
         if (!keyStore.containsAlias(keystoreAlias)) {
@@ -50,7 +50,7 @@ class EncryptionAlgorithm {
     @Throws(Exception::class)
     fun loadSecretKey(keystoreAlias: String, guardianKey: Key): KeyStore {
         val androidKeyStore = "AndroidKeyStore"
-        var keyStore = KeyStore.getInstance(androidKeyStore)
+        val keyStore = KeyStore.getInstance(androidKeyStore)
         keyStore.load(null)
 
         if (!keyStore.containsAlias(keystoreAlias)) {

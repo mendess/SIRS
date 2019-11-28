@@ -17,6 +17,7 @@ pub enum Error {
     CouldntDecodeB64,
     DecryptionFailed,
     InvalidPacketFormat,
+    InvalidUsernameOrPassword,
     Other,
 }
 

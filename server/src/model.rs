@@ -4,7 +4,7 @@ mod location;
 
 pub use child::{Child, ChildId};
 pub use guardian::GuardianId;
-pub use location::{Location};
+pub use location::Location;
 
 use super::schema::{children, guardian_has_children, guardians, locations};
 use crate::error::{Error, Result};
@@ -50,6 +50,23 @@ impl Db {
                     DBError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
                         Error::AlreadyGuarding
                     }
+                    _ => Error::Other,
+                }
+            })
+    }
+
+    pub fn login_guardian(&self, username: String, password: String) -> Result<GuardianId> {
+        guardians::table
+            .filter(guardians::username.eq(username))
+            .filter(guardians::password.eq(password))
+            .select(guardians::id)
+            .first::<i32>(&*self.0.lock().unwrap())
+            .map(GuardianId::from)
+            .map_err(|e| {
+                eprintln!("Error in Db::login_guardian: {:?}", e);
+                use diesel::result::Error as DBError;
+                match e {
+                    DBError::NotFound => Error::InvalidUsernameOrPassword,
                     _ => Error::Other,
                 }
             })
@@ -117,11 +134,7 @@ impl Db {
             .inner_join(
                 locations::table.on(guardian_has_children::child_id.eq(locations::child_id)),
             )
-            .select((
-                locations::id,
-                locations::child_id,
-                locations::location,
-            ))
+            .select((locations::id, locations::child_id, locations::location))
             .load::<LocationInternal>(&*self.0.lock().unwrap())
             .map(|v| v.into_iter().map(Location::from).collect())
             .map_err(|e| {
