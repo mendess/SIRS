@@ -1,98 +1,239 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-
+#![allow(dead_code)]
 mod error;
+mod init_protocol;
 mod model;
 mod schema;
 
 #[macro_use]
-extern crate rocket;
-#[macro_use]
 extern crate diesel;
 
 use error::Error;
-use model::{Child, ChildId, Db, GuardianId, Location, NewLocation};
-use rocket::{
-    http::RawStr,
-    request::FromParam,
-    State,
-};
-use rocket_contrib::json::Json;
+use model::{Child, ChildId, Db, GuardianId, Location};
+use openssl::symm::{self, Cipher};
+use rand::{distributions::Standard, rngs::StdRng, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
+use serde_json::Deserializer;
+use std::{
+    io::{self, Read, Write},
+    net::{TcpListener, TcpStream},
+    sync::Arc,
+    thread,
+};
+use x25519_dalek::SharedSecret;
+
+#[derive(Serialize, Deserialize)]
+enum Request {
+    RegisterGuardian {
+        username: String,
+        password: String,
+    },
+    RegisterChild {
+        guardian: GuardianId,
+        username: String,
+    },
+    ChildLocation {
+        guardian: GuardianId,
+        child: ChildId,
+    },
+    ListChildren {
+        guardian: GuardianId,
+    },
+    UpdateChildLocation {
+        child: ChildId,
+        location: String,
+    },
+}
+
+#[derive(Serialize, Deserialize)]
+enum Response {
+    RegisterGuardian { id: GuardianId },
+    RegisterChild { id: ChildId },
+    ChildLocation { locations: Vec<String> },
+    ListChildren { children: Vec<Child> },
+    UpdateChildLocation,
+}
+
+impl Request {
+    #[allow(unused_variables)]
+    fn serve(self, db: &Db) -> Result<Response, Error> {
+        use Request::*;
+        use Response as R;
+        match self {
+            RegisterGuardian {
+                username: u,
+                password: p,
+            } => db
+                .register_new_guardian(u, p)
+                .map(|id| R::RegisterGuardian { id }),
+            RegisterChild {
+                guardian: g,
+                username: u,
+            } => db
+                .register_new_child(u, g)
+                .map(|id| R::RegisterChild { id }),
+            ChildLocation {
+                guardian: g,
+                child: c,
+            } => db.child_location(c, g).map(|v| R::ChildLocation {
+                locations: v.into_iter().map(|l| l.into_blob()).collect(),
+            }),
+            ListChildren { guardian: g } => {
+                db.list_children(g).map(|l| R::ListChildren { children: l })
+            }
+            UpdateChildLocation {
+                child: c,
+                location: l,
+            } => db
+                .update_child_location(Location::new(c, l))
+                .map(|_| R::UpdateChildLocation),
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
-struct RegisterGuardianRequest {
-    username: String,
-    password: String,
+struct Packet {
+    iv: String,
+    payload: String,
 }
 
-#[post("/guardian/create", data = "<request>")]
-fn register_guardian(
-    db: State<Db>,
-    request: Json<RegisterGuardianRequest>,
-) -> Result<String, Error> {
-    let request = request.into_inner();
-    db.register_new_guardian(request.username, request.password)
-        .map(|i| i.to_string())
+struct Session {
+    cipher: Cipher,
+    session_key: SharedSecret,
+    db: Arc<Db>,
+    stream: TcpStream,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct GetChildLocation {
-    guardian: GuardianId,
-    child: ChildId,
-}
+impl Session {
+    fn start(mut stream: TcpStream, db: Arc<Db>) -> Result<(), io::Error> {
+        let mut client_key = [0_u8; 32];
+        stream.read_exact(&mut client_key)?;
+        let mut session = Self {
+            cipher: Cipher::aes_256_ofb(),
+            session_key: init_protocol::exchange_dh(
+                x25519_dalek::PublicKey::from(client_key),
+                &mut stream,
+            )?,
+            db,
+            stream,
+        };
+        for packet in Deserializer::from_reader(session.stream.try_clone()?).into_iter() {
+            let response = packet
+                .map_err(Error::from)
+                .and_then(|p| session.read_request(p))
+                .and_then(|r| r.serve(&session.db));
+            session.write_response(response)?;
+        }
+        Ok(())
+    }
 
-#[post("/guardian", data = "<request>")]
-fn where_is_my_child(
-    db: State<Db>,
-    request: Json<GetChildLocation>,
-) -> Result<Option<Json<Location>>, Error> {
-    db.child_location(request.child, request.guardian)
-        .map(|mut l| l.pop().map(|i| Json(i)))
-}
+    fn read_request(&mut self, packet: Packet) -> Result<Request, Error> {
+        let iv = base64::decode(&packet.iv)?;
+        let payload = base64::decode(&packet.payload)?;
+        let thing = symm::decrypt(
+            self.cipher,
+            self.session_key.as_bytes(),
+            Some(&iv),
+            &payload,
+        )?;
+        eprintln!("payload: {}", std::str::from_utf8(&thing).unwrap());
+        Ok(serde_json::from_slice(&thing).map_err(|e| { eprintln!("Wut?"); e })?)
+    }
 
-#[get("/guardian/<guardian>")]
-fn list_children(db: State<Db>, guardian: GuardianId) -> Result<Json<Vec<Child>>, Error> {
-    db.list_children(guardian).map(|c| Json(c))
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct RegisterChild {
-    guardian: GuardianId,
-    username: String,
-}
-
-#[post("/child/create", data = "<request>")]
-fn register_child(db: State<Db>, request: Json<RegisterChild>) -> Result<String, Error> {
-    let request = request.into_inner();
-    db.register_new_child(request.username, request.guardian)
-        .map(|i| i.to_string())
-}
-
-#[post("/child", data = "<request>")]
-fn update_child_location(db: State<Db>, request: Json<NewLocation>) -> Result<(), Error> {
-    db.update_child_location(request.into_inner())
+    fn write_response(&mut self, response: Result<Response, Error>) -> Result<(), io::Error> {
+        let rng = StdRng::from_seed(Default::default());
+        let iv = rng.sample_iter(Standard).take(16).collect::<Vec<u8>>();
+        let payload = serde_json::to_vec(&response).expect("Couldn't serialize response");
+        eprintln!(
+            "Sending response: {}",
+            serde_json::to_string_pretty(&response).unwrap()
+        );
+        let payload = symm::encrypt(
+            self.cipher,
+            self.session_key.as_bytes(),
+            Some(&iv),
+            &payload,
+        )
+        .expect("Couldn't encrypt message");
+        let packet = Packet {
+            payload: base64::encode(&payload),
+            iv: base64::encode(&iv),
+        };
+        serde_json::to_writer(&self.stream, &packet)?;
+        self.stream.write_all(&[b'\n'])?;
+        Ok(())
+    }
 }
 
 fn main() {
-    rocket::ignite()
-        .mount(
-            "/",
-            routes![
-                where_is_my_child,
-                register_guardian,
-                register_child,
-                update_child_location,
-                list_children,
-            ],
-        )
-        .manage(Db::default())
-        .launch();
+    let database = Arc::new(Db::default());
+    let listener = TcpListener::bind("0.0.0.0:6894").unwrap();
+    for stream in listener.incoming() {
+        let db_clone = Arc::clone(&database);
+        thread::spawn(|| {
+            let _ = stream
+                .and_then(|s| {
+                    eprintln!("Received connection from {:?}", s.local_addr());
+                    Session::start(s, db_clone)
+                })
+                .map_err(|e| eprintln!("Connection ended with: {:?}", e));
+        });
+    }
 }
 
-impl<'r> FromParam<'r> for GuardianId {
-    type Error = &'r RawStr;
+fn show_api() {
+    let r = Packet {
+        payload: "base64".into(),
+        iv: "00000".into(),
+    };
+    println!("Packet: {}", serde_json::to_string_pretty(&r).unwrap());
 
-    fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
-        i32::from_param(param).map(GuardianId::from)
-    }
+    let r = Request::RegisterGuardian {
+        username: "user".into(),
+        password: "pass".into(),
+    };
+    println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
+    let r = Response::RegisterGuardian { id: 1.into() };
+    println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
+
+    let r = Request::RegisterChild {
+        guardian: 1.into(),
+        username: "child".into(),
+    };
+    println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
+    let r = Response::RegisterChild { id: 1.into() };
+    println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
+
+    let r = Request::ChildLocation {
+        guardian: 1.into(),
+        child: 1.into(),
+    };
+    println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
+    let r = Response::ChildLocation {
+        locations: vec!["some encryted blob".into(), "gibberish".into()],
+    };
+    println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
+
+    let r = Request::ListChildren { guardian: 1.into() };
+    println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
+    let r = Response::ListChildren {
+        children: vec![
+            Child {
+                id: 1,
+                username: "child1".into(),
+            },
+            Child {
+                id: 2,
+                username: "child2".into(),
+            },
+        ],
+    };
+    println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
+
+    let r = Request::UpdateChildLocation {
+        child: 1.into(),
+        location: "some encryted blob".into(),
+    };
+    println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
+    let r = Response::UpdateChildLocation;
+    println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
 }

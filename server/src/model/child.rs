@@ -21,3 +21,9 @@ impl Display for ChildId {
         write!(f, "{}", self.0)
     }
 }
+
+impl From<i32> for ChildId {
+    fn from(i: i32) -> Self {
+        Self(i)
+    }
+}

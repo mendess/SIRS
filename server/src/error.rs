@@ -1,21 +1,22 @@
-use rocket::{
-    http::{ContentType, Status},
-    response::{self, Responder},
-    Request, Response,
-};
+use base64::DecodeError;
+use openssl::error::ErrorStack;
+use serde::{Deserialize, Serialize};
+use serde_json::error::Error as SerdeError;
 use std::error::Error as ErrorT;
 use std::fmt::{self, Display};
-use std::io::Cursor;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum Error {
     InvalidChild,
     InvalidGuardian,
     NotGuarding,
     AlreadyGuarding,
     InvalidChildOrGuardian,
+    CouldntDecodeB64,
+    DecryptionFailed,
+    InvalidPacketFormat,
     Other,
 }
 
@@ -27,12 +28,21 @@ impl Display for Error {
     }
 }
 
-impl<'r> Responder<'r> for Error {
-    fn respond_to(self, _: &Request) -> response::Result<'r> {
-        Response::build()
-            .header(ContentType::Plain)
-            .sized_body(Cursor::new(format!("{}", self)))
-            .status(Status::BadRequest)
-            .ok()
+impl From<ErrorStack> for Error {
+    fn from(_: ErrorStack) -> Self {
+        Self::DecryptionFailed
+    }
+}
+
+impl From<DecodeError> for Error {
+    fn from(_: DecodeError) -> Self {
+        Self::CouldntDecodeB64
+    }
+}
+
+impl From<SerdeError> for Error {
+    fn from(e: SerdeError) -> Self {
+        eprintln!("Serde: {:?}", e);
+        Self::InvalidPacketFormat
     }
 }

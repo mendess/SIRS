@@ -24,8 +24,7 @@ table! {
     locations (id) {
         id -> Int4,
         child_id -> Int4,
-        latitude -> Float8,
-        longitude -> Float8,
+        location -> Varchar,
     }
 }
 

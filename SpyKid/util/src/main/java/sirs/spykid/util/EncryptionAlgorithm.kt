@@ -9,11 +9,15 @@ import javax.crypto.spec.SecretKeySpec
 import android.security.keystore.KeyProperties
 import android.security.keystore.KeyGenParameterSpec
 import androidx.annotation.RequiresApi
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import org.whispersystems.curve25519.Curve25519
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.security.*
-import javax.net.ssl.SSLSocket
-import javax.net.ssl.SSLSocketFactory
-import java.io.*
+import java.net.Socket
+import java.util.*
 
 
 class EncryptionAlgorithm {
@@ -61,7 +65,7 @@ class EncryptionAlgorithm {
         return keyStore.getKey(keystoreAlias, null)
     }
 
-    fun encrypt(secretKey: Key, message: ByteArray) : ByteArray{
+    fun encrypt(secretKey: Key, message: ByteArray): ByteArray {
         val data = secretKey.encoded
         val keySpec = SecretKeySpec(data, 0, data.size, "AES")
         val cipher = Cipher.getInstance("AES")
@@ -69,59 +73,78 @@ class EncryptionAlgorithm {
         return cipher.doFinal(message)
     }
 
-    fun decrypt(secretKey: Key, secret: ByteArray) : ByteArray{
+    fun decrypt(secretKey: Key, secret: ByteArray): ByteArray {
         val message: ByteArray
         val cipher = Cipher.getInstance("AES")
         cipher.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(ByteArray(cipher.blockSize)))
         message = cipher.doFinal(secret)
         return message
     }
+}
 
-    fun generateSessionKey(): ByteArray? {
-        // Open SSLSocket
-        val socket: SSLSocket = SSLSocketFactory.getDefault().run {
-            createSocket("http://localhost/", 443) as SSLSocket
+/**
+ * Starts a TCP session with the server, negotiating a shared secret
+ */
+@RequiresApi(Build.VERSION_CODES.O)
+class Session(host: String, port: Int) {
+    companion object {
+        lateinit var session: Session
+        fun <T : Requests.ToJson> request(message: T): String {
+            if (!::session.isInitialized) {
+                session = Session("localhost", 6894)
+            }
+            return session.request(message.toJson())
         }
-        val session = socket.session
-
-        //Generate ephemeral value and y_a
-        val keyPair = Curve25519.getInstance(Curve25519.BEST).generateKeyPair()
-
-        //Encode and send y_a
-        socket.startHandshake()
-
-        val out = PrintWriter(
-            BufferedWriter(
-                OutputStreamWriter(
-                    socket.outputStream
-                )
-            )
-        )
-
-        out.println(keyPair.publicKey)
-        out.println()
-        out.flush()
-
-        //Receive y_b
-        val incoming = BufferedReader(
-            InputStreamReader(
-                socket.inputStream
-            )
-        )
-
-        val inputLine: String = incoming.readLine()
-        val bobPubKey = inputLine.toByteArray()
-
-        out.close()
-        incoming.close()
-
-        //Create session key
-        val cipher = Curve25519.getInstance(Curve25519.BEST)
-        val sharedSecret = cipher.calculateAgreement(bobPubKey, keyPair.privateKey)
-
-        socket.close()
-
-        return sharedSecret
     }
 
+    private val connection: Socket = Socket(host, port)
+    private val connectionReader: BufferedReader
+    private val sessionKey: ByteArray
+
+    init {
+        this.sessionKey = generateSessionKey(this.connection)
+        this.connectionReader = BufferedReader(InputStreamReader(this.connection.getInputStream()))
+    }
+
+    /**
+     * Sends a request encrypted with the shared secret
+     */
+    internal fun request(message: String): String {
+        val keySpec = SecretKeySpec(this.sessionKey, 0, this.sessionKey.size, "AES")
+        val cipher = Cipher.getInstance("AES/OFB/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec)
+        val cipherText = String(Base64.getEncoder().encode(cipher.doFinal(message.toByteArray())))
+        val packet = JsonObject()
+        packet.add("payload", JsonPrimitive(cipherText))
+        packet.add("iv", JsonPrimitive(Base64.getEncoder().encodeToString(cipher.iv)))
+        this.connection.getOutputStream().write(packet.toString().toByteArray())
+        val response = Packet.from(this.connectionReader.readLine())
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(response.iv))
+        return String(cipher.doFinal(response.payload))
+    }
+
+    private fun generateSessionKey(socket: Socket): ByteArray {
+        //Generate ephemeral value and y_a
+        val keyPair = Curve25519.getInstance(Curve25519.BEST).generateKeyPair()
+        //Send y_a
+        socket.getOutputStream().write(keyPair.publicKey)
+        // Receive y_b
+        val serverPublic = ByteArray(32)
+        socket.getInputStream().read(serverPublic)
+        // Generate shared secret
+        val cipher = Curve25519.getInstance(Curve25519.BEST)
+        return cipher.calculateAgreement(serverPublic, keyPair.privateKey)
+    }
+
+    private class Packet private constructor(val iv: ByteArray, val payload: ByteArray) {
+        companion object {
+            internal fun from(data: String): Packet {
+                val jsonObj = JsonParser.parseString(data).asJsonObject
+                return Packet(
+                    Base64.getDecoder().decode(jsonObj.get("iv").asString),
+                    Base64.getDecoder().decode(jsonObj.get("payload").asString)
+                )
+            }
+        }
+    }
 }

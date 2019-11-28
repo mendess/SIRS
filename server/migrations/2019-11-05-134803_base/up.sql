@@ -21,7 +21,6 @@ CREATE TABLE guardian_has_children (
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,
     child_id INTEGER NOT NULL,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
+    location VARCHAR NOT NULL,
     FOREIGN KEY (child_id) REFERENCES children
 );

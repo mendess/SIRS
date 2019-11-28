@@ -7,9 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.4.2"
-rocket_contrib = { version = "0.4.2", default-features = false, features = ["json"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 diesel = { version = "1.0.0", features=["postgres"] }
 dotenv = "0.9.x"
+rand = "*"
+openssl = { version = "0.10", features = ["vendored"] }
+once_cell = "*"
+x25519-dalek = "*"
+base64 = "*"

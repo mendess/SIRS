@@ -4,7 +4,7 @@ mod location;
 
 pub use child::{Child, ChildId};
 pub use guardian::GuardianId;
-pub use location::{Location, NewLocation};
+pub use location::{Location};
 
 use super::schema::{children, guardian_has_children, guardians, locations};
 use crate::error::{Error, Result};
@@ -21,7 +21,7 @@ impl Default for Db {
         let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         PgConnection::establish(&db_url)
             .map(|c| Db(Mutex::new(c)))
-            .expect(&format!("Error connecting to {}", db_url))
+            .unwrap_or_else(|_| panic!(format!("Error connecting to {}", db_url)))
     }
 }
 
@@ -94,7 +94,7 @@ impl Db {
         })
     }
 
-    pub fn update_child_location(&self, location: NewLocation) -> Result<()> {
+    pub fn update_child_location(&self, location: Location) -> Result<()> {
         diesel::insert_into(locations::table)
             .values(&location)
             .execute(&*self.0.lock().unwrap())
@@ -120,8 +120,7 @@ impl Db {
             .select((
                 locations::id,
                 locations::child_id,
-                locations::latitude,
-                locations::longitude,
+                locations::location,
             ))
             .load::<LocationInternal>(&*self.0.lock().unwrap())
             .map(|v| v.into_iter().map(Location::from).collect())
@@ -174,7 +173,7 @@ impl Db {
 
 #[derive(Insertable, Identifiable, Queryable, Associations)]
 #[table_name = "guardian_has_children"]
-#[belongs_to(Child, table_name = "children")]
+#[belongs_to(Child)]
 #[belongs_to(Guardian)]
 #[primary_key(guardian_id, child_id)]
 struct GuardianHasChildren {
