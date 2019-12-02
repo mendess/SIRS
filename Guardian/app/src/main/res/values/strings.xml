@@ -4,4 +4,6 @@
     <string name="signin_button_text">Sign In</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_add_beacon">AddBeaconActivity</string>
+    <string name="qrcode_desc">QR code key</string>
+    <string name="menu_activtity_text">Menu Activity</string>
 </resources>

@@ -19,6 +19,8 @@ import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseUser;
 import com.sirs.guardianapp.service.QRGenerator;
 
 import java.util.ArrayList;
@@ -27,9 +29,10 @@ import java.util.List;
 public class MenuActivity extends AppCompatActivity {
 
     private Button signOutButton;
-    private Button addBeaconButton;
+    private FloatingActionButton addBeaconButton;
     private ImageView image;
     private ListView listView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +68,12 @@ public class MenuActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        FirebaseUser user = getIntent().getParcelableExtra("User");
+        if(user != null) {
+            System.out.println(user.getEmail());
+        }
+        //API CALL -> get Beacons assigned to current guardian
         final List<String> list = new ArrayList<>();
         for(int i = 1 ; i < 5 ; i++) {
             list.add("Beacon " + i);
@@ -91,4 +100,6 @@ public class MenuActivity extends AppCompatActivity {
         imageView.setVisibility(View.VISIBLE);
 
     }
+
+
 }

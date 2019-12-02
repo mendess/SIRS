@@ -59,7 +59,8 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "" + user.getEmail(), Toast.LENGTH_SHORT).show();
 
                 //Switch to Menu Activity
-                Intent intent = new Intent(this, MenuActivity.class);
+                Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+                intent.putExtra("User", user);
                 startActivity(intent);
 
             }
