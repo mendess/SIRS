@@ -4,6 +4,7 @@ import android.os.AsyncTask
 import android.os.Build
 import androidx.annotation.RequiresApi
 import java.time.LocalDateTime
+import java.util.function.Consumer
 
 @RequiresApi(Build.VERSION_CODES.O)
 class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) {
@@ -26,6 +27,7 @@ data class Child(val id: ChildId, val username: String)
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun registerGuardian(
+    callback: Consumer<Result<Responses.RegisterGuardian, Responses.Error>>,
     username: String,
     password: String
 ): AsyncTask<Pair<String, String>, Unit, Result<Responses.RegisterGuardian, Responses.Error>> =
@@ -33,6 +35,7 @@ fun registerGuardian(
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginGuardian(
+    callback: Consumer<Result<Responses.LoginGuardian, Responses.Error>>,
     username: String,
     password: String
 ): AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginGuardian, Responses.Error>> =
@@ -40,6 +43,7 @@ fun loginGuardian(
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun registerChild(
+    callback: Consumer<Result<Responses.RegisterChild, Responses.Error>>,
     guardianToken: GuardianToken,
     username: String,
     password: String
@@ -48,6 +52,7 @@ fun registerChild(
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginChild(
+    callback: Consumer<Result<Responses.LoginChild, Responses.Error>>,
     username: String,
     password: String
 ): AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginChild, Responses.Error>> =
@@ -55,20 +60,25 @@ fun loginChild(
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun listChildren(
+    callback: Consumer<Result<Responses.ListChildren, Responses.Error>>,
     guardianToken: GuardianToken
 ): AsyncTask<GuardianToken, Unit, Result<Responses.ListChildren, Responses.Error>> =
     ListChildren().execute(guardianToken)
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun childLocation(
+    callback: Consumer<Result<Responses.ChildLocation, Responses.Error>>,
     guardianToken: GuardianToken,
     childToken: ChildId
-): AsyncTask<Pair<GuardianToken, ChildId>, Unit, Result<Responses.ChildLocation, Responses.Error>> =
+) {
     ChildLocation().execute(Pair(guardianToken, childToken))
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun updateChildLocation(
+    callback: Consumer<Result<Responses.UpdateChildLocation, Responses.Error>>,
     childToken: ChildToken,
     location: Location
-): AsyncTask<Pair<ChildToken, Location>, Unit, Result<Responses.UpdateChildLocation, Responses.Error>> =
+) {
     UpdateChildLocation().execute(Pair(childToken, location))
+}

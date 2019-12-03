@@ -2,6 +2,7 @@ package sirs.spykid.util
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import java.util.function.Consumer
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 interface Result<T, E> {
@@ -10,6 +11,7 @@ interface Result<T, E> {
     fun <U> map(f: (T) -> U): Result<U, E>
     fun <U> mapOrElse(f: (T) -> U, e: (E) -> U): U
     fun <F> mapErr(f: (E) -> F): Result<T, F>
+    fun match(ok: Consumer<T>, err: Consumer<E>)
     fun unwrap(): T
     fun unwrapOr(def: T): T
     fun unwrapOrElse(f: (E) -> T): T
@@ -41,6 +43,9 @@ interface Result<T, E> {
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 class Ok<T, E>(val value: T) : Result<T, E> {
+    override fun match(ok: Consumer<T>, err: Consumer<E>) {
+        ok.accept(value);
+    }
 
     override fun isOk(): Boolean {
         return true
@@ -111,6 +116,9 @@ class Ok<T, E>(val value: T) : Result<T, E> {
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 class Err<T, E>(val err: E) : Result<T, E> {
+    override fun match(ok: Consumer<T>, err: Consumer<E>) {
+        err.accept(this.err)
+    }
 
     override fun isOk(): Boolean {
         return false
