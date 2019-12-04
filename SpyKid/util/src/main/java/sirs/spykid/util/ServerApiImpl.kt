@@ -8,9 +8,10 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
 import java.util.*
+import java.util.function.Consumer
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class RegisterGuardian :
+internal class RegisterGuardian(private val callback: (Result<Responses.RegisterGuardian, Responses.Error>) -> Unit) :
     AsyncTask<Pair<String, String>, Unit, Result<Responses.RegisterGuardian, Responses.Error>>() {
     companion object {
         internal fun run(
@@ -32,7 +33,7 @@ internal class RegisterGuardian :
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class LoginGuardian :
+internal class LoginGuardian(callback: (Result<Responses.LoginGuardian, Responses.Error>) -> Unit):
     AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginGuardian, Responses.Error>>() {
     companion object {
         internal fun run(
@@ -207,7 +208,7 @@ class Responses {
                 ChildLocation(
                     json.asJsonObject.get("ChildLocation").asJsonObject.get(
                         "locations"
-                    ).asJsonArray.map { s -> Location.fromBytes(Base64.getDecoder().decode(s.asString)) }
+                    ).asJsonArray.map { s -> Location.decrypt(Base64.getDecoder().decode(s.asString)) }
                 )
         }
     }
