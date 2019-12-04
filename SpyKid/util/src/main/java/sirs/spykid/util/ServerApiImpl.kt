@@ -12,7 +12,7 @@ import java.util.function.Consumer
 
 @RequiresApi(Build.VERSION_CODES.N)
 internal class RegisterGuardian(private val callback: (Result<Responses.RegisterGuardian, Responses.Error>) -> Unit) :
-    AsyncTask<Pair<String, String>, Unit, Result<Responses.RegisterGuardian, Responses.Error>>() {
+    AsyncTask<Pair<String, String>, Unit, Unit>() {
     companion object {
         internal fun run(
             username: String,
@@ -23,18 +23,15 @@ internal class RegisterGuardian(private val callback: (Result<Responses.Register
                 .mapErr { Responses.errorFromJson(it) }
     }
 
-    override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.RegisterGuardian, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<String, String>) {
         assert(params.isNotEmpty())
-        return run(
-            params[0].first,
-            params[0].second
-        )
+        callback(run(params[0].first, params[0].second))
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class LoginGuardian(callback: (Result<Responses.LoginGuardian, Responses.Error>) -> Unit):
-    AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginGuardian, Responses.Error>>() {
+internal class LoginGuardian(private val callback: (Result<Responses.LoginGuardian, Responses.Error>) -> Unit) :
+    AsyncTask<Pair<String, String>, Unit, Unit>() {
     companion object {
         internal fun run(
             username: String,
@@ -46,16 +43,16 @@ internal class LoginGuardian(callback: (Result<Responses.LoginGuardian, Response
         }
     }
 
-    override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.LoginGuardian, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<String, String>) {
         assert(params.isNotEmpty())
-        return run(params[0].first, params[1].second)
+        callback(run(params[0].first, params[1].second))
     }
 
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class ListChildren :
-    AsyncTask<GuardianToken, Unit, Result<Responses.ListChildren, Responses.Error>>() {
+internal class ListChildren(private val callback: (Result<Responses.ListChildren, Responses.Error>) -> Unit) :
+    AsyncTask<GuardianToken, Unit, Unit>() {
     companion object {
         internal fun run(guardianToken: GuardianToken): Result<Responses.ListChildren, Responses.Error> =
             resultFromJson(Session.request(Requests.ListChildren(guardianToken)))
@@ -63,16 +60,16 @@ internal class ListChildren :
                 .mapErr { Responses.errorFromJson(it) }
     }
 
-    override fun doInBackground(vararg params: GuardianToken): Result<Responses.ListChildren, Responses.Error> {
+    override fun doInBackground(vararg params: GuardianToken) {
         assert(params.isNotEmpty())
-        return run(params[0])
+        callback(run(params[0]))
     }
 
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class ChildLocation :
-    AsyncTask<Pair<GuardianToken, ChildId>, Unit, Result<Responses.ChildLocation, Responses.Error>>() {
+internal class ChildLocation(private val callback: (Result<Responses.ChildLocation, Responses.Error>) -> Unit) :
+    AsyncTask<Pair<GuardianToken, ChildId>, Unit, Unit>() {
     companion object {
         internal fun run(
             guardianToken: GuardianToken,
@@ -84,40 +81,50 @@ internal class ChildLocation :
 
     }
 
-    override fun doInBackground(vararg params: Pair<GuardianToken, ChildId>): Result<Responses.ChildLocation, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<GuardianToken, ChildId>) {
         assert(params.isNotEmpty())
-        return run(params[0].first, params[0].second)
+        callback(run(params[0].first, params[0].second))
     }
 
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class RegisterChild :
-    AsyncTask<Triple<GuardianToken, String, String>, Unit, Result<Responses.RegisterChild, Responses.Error>>() {
+internal class RegisterChild(private val callback: (Result<Responses.RegisterChild, Responses.Error>) -> Unit) :
+    AsyncTask<Triple<GuardianToken, String, String>, Unit, Unit>() {
     companion object {
         internal fun run(
             guardianToken: GuardianToken,
             username: String,
             password: String
         ): Result<Responses.RegisterChild, Responses.Error> =
-            resultFromJson(Session.request(Requests.RegisterChild(guardianToken, username, password)))
+            resultFromJson(
+                Session.request(
+                    Requests.RegisterChild(
+                        guardianToken,
+                        username,
+                        password
+                    )
+                )
+            )
                 .map { Responses.RegisterChild.fromJson(it) }
                 .mapErr { Responses.errorFromJson(it) }
     }
 
-    override fun doInBackground(vararg params: Triple<GuardianToken, String, String>): Result<Responses.RegisterChild, Responses.Error> {
+    override fun doInBackground(vararg params: Triple<GuardianToken, String, String>) {
         assert(params.isNotEmpty())
-        return run(
-            params[0].first,
-            params[0].second,
-            params[0].third
+        callback(
+            run(
+                params[0].first,
+                params[0].second,
+                params[0].third
+            )
         )
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
-internal class LoginChild :
-    AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginChild, Responses.Error>>() {
+internal class LoginChild(private val callback: (Result<Responses.LoginChild, Responses.Error>) -> Unit) :
+    AsyncTask<Pair<String, String>, Unit, Unit>() {
     companion object {
         internal fun run(
             username: String,
@@ -129,15 +136,15 @@ internal class LoginChild :
         }
     }
 
-    override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.LoginChild, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<String, String>) {
         assert(params.isNotEmpty())
-        return run(params[0].first, params[1].second)
+        callback(run(params[0].first, params[1].second))
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-internal class UpdateChildLocation :
-    AsyncTask<Pair<ChildToken, Location>, Unit, Result<Responses.UpdateChildLocation, Responses.Error>>() {
+internal class UpdateChildLocation(private val callback: (Result<Responses.UpdateChildLocation, Responses.Error>) -> Unit) :
+    AsyncTask<Pair<ChildToken, Location>, Unit, Unit>() {
     companion object {
         internal fun run(
             child: ChildToken,
@@ -148,9 +155,9 @@ internal class UpdateChildLocation :
                 .mapErr { Responses.errorFromJson(it) }
     }
 
-    override fun doInBackground(vararg params: Pair<ChildToken, Location>): Result<Responses.UpdateChildLocation, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<ChildToken, Location>) {
         assert(params.isNotEmpty())
-        return run(params[0].first, params[1].second)
+        callback(run(params[0].first, params[1].second))
     }
 
 }
@@ -206,9 +213,9 @@ class Responses {
         companion object {
             internal fun fromJson(json: JsonElement): ChildLocation =
                 ChildLocation(
-                    json.asJsonObject.get("ChildLocation").asJsonObject.get(
-                        "locations"
-                    ).asJsonArray.map { s -> Location.decrypt(Base64.getDecoder().decode(s.asString)) }
+                    json.asJsonObject.get("ChildLocation").asJsonObject.get("locations").asJsonArray
+                        .map { s -> Location.decrypt(Base64.getDecoder().decode(s.asString)) }
+                        .sortedByDescending { it.timestamp }
                 )
         }
     }
@@ -354,8 +361,10 @@ internal class Requests {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    internal class UpdateChildLocation(private val child: ChildToken, private val location: Location) :
-        ToJson {
+    internal class UpdateChildLocation(
+        private val child: ChildToken,
+        private val location: Location
+    ) : ToJson {
         override fun toJson(): String {
             val innerJson = JsonObject()
             innerJson.add("child", JsonPrimitive(child.id))

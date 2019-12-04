@@ -1,6 +1,5 @@
 package sirs.spykid.util
 
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
@@ -144,16 +143,18 @@ fun registerGuardian(
     callback: Consumer<Result<Responses.RegisterGuardian, Responses.Error>>,
     username: String,
     password: String
-): AsyncTask<Pair<String, String>, Unit, Result<Responses.RegisterGuardian, Responses.Error>> =
+) {
     RegisterGuardian(callback::accept).execute(Pair(username, password))
+}
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginGuardian(
     callback: Consumer<Result<Responses.LoginGuardian, Responses.Error>>,
     username: String,
     password: String
-): AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginGuardian, Responses.Error>> =
+) {
     LoginGuardian(callback::accept).execute(Pair(username, password))
+}
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun registerChild(
@@ -161,23 +162,26 @@ fun registerChild(
     guardianToken: GuardianToken,
     username: String,
     password: String
-): AsyncTask<Triple<GuardianToken, String, String>, Unit, Result<Responses.RegisterChild, Responses.Error>> =
-    RegisterChild().execute(Triple(guardianToken, username, password))
+) {
+    RegisterChild(callback::accept).execute(Triple(guardianToken, username, password))
+}
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginChild(
     callback: Consumer<Result<Responses.LoginChild, Responses.Error>>,
     username: String,
     password: String
-): AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginChild, Responses.Error>> =
-    LoginChild().execute(Pair(username, password))
+) {
+    LoginChild(callback::accept).execute(Pair(username, password))
+}
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun listChildren(
     callback: Consumer<Result<Responses.ListChildren, Responses.Error>>,
     guardianToken: GuardianToken
-): AsyncTask<GuardianToken, Unit, Result<Responses.ListChildren, Responses.Error>> =
-    ListChildren().execute(guardianToken)
+) {
+    ListChildren(callback::accept).execute(guardianToken)
+}
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun childLocation(
@@ -185,7 +189,7 @@ fun childLocation(
     guardianToken: GuardianToken,
     childToken: ChildId
 ) {
-    ChildLocation().execute(Pair(guardianToken, childToken))
+    ChildLocation(callback::accept).execute(Pair(guardianToken, childToken))
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -194,5 +198,5 @@ fun updateChildLocation(
     childToken: ChildToken,
     location: Location
 ) {
-    UpdateChildLocation().execute(Pair(childToken, location))
+    UpdateChildLocation(callback::accept).execute(Pair(childToken, location))
 }
