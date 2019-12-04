@@ -68,9 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void startActivityAfterLogin(FirebaseUser user, GuardianToken token) {
         Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
-        intent.putExtra("User", user);
-        //TODO
-        intent.putExtra("Token", token.toString());
+        intent.putExtra("user", user);
+        intent.putExtra("guardianToken", token);
         startActivity(intent);
     }
 

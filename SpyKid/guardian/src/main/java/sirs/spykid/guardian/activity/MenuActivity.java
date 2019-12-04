@@ -31,6 +31,7 @@ import java.util.Map;
 
 import sirs.spykid.guardian.R;
 import sirs.spykid.util.Child;
+import sirs.spykid.util.ChildToken;
 import sirs.spykid.util.GuardianToken;
 import sirs.spykid.util.ServerApiKt;
 
@@ -40,8 +41,10 @@ public class MenuActivity extends AppCompatActivity {
     private FloatingActionButton addBeaconButton;
     private ImageView image;
     private ListView listView;
+
     private List<Child> children = new ArrayList<>();
     private FirebaseUser user;
+    private GuardianToken guardianToken;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -74,22 +77,19 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
 
-        user = getIntent().getParcelableExtra("User");
-        if(user == null) finish();
+        user = getIntent().getParcelableExtra("user");
+        guardianToken = getIntent().getParcelableExtra("guardianToken");
+        if(user == null || guardianToken == null)
+            Toast.makeText(this, "Invalid user and/or guardian token", Toast.LENGTH_SHORT).show();
 
-        //TODO <wtf is this>
-        listChildren(new GuardianToken(2));
-
+        listChildren(guardianToken);
         listView = findViewById(R.id.beacon_list);
         ArrayAdapter arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, children);
         listView.setAdapter(arrayAdapter);
         listView.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
             Child child = (Child) parent.getSelectedItem();
-            //TODO -> check this
-            intent.putExtra("username", child.getUsername());
-            intent.putExtra("id", child.getId().toString());
-            startActivity(intent);
+            startMapActivity(child);
         });
 
         Bitmap bmp = QRGenerator.qrFromString("THIS IS MY SECRET KEY FOR THE CHILD BEACON APP");
@@ -104,6 +104,14 @@ public class MenuActivity extends AppCompatActivity {
                 ok -> children.addAll(ok.getChildren()),
                 error -> Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
         ), token);
+    }
+
+    private void startMapActivity(Child child) {
+        Intent intent = getIntent();
+        intent.putExtra("child", child);
+        intent.putExtra("guardianToken", guardianToken);
+        startActivity(intent);
+        finish();
     }
 
 }
