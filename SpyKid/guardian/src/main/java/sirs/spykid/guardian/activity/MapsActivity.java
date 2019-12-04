@@ -1,4 +1,4 @@
-package sirs.spykid.guardian;
+package sirs.spykid.guardian.activity;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -11,9 +11,15 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import sirs.spykid.guardian.R;
+import sirs.spykid.util.ChildToken;
+import sirs.spykid.util.GuardianToken;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private GuardianToken guardianToken;
+    private ChildToken childToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +46,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
+
+        updateLocation();
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
+
+    private void updateLocation() throws InterruptedException {
+
+        while(true) {
+
+
+
+
+
+            Thread.sleep(4000);
+        }
+
+    }
+
+
+
 }

@@ -1,17 +1,19 @@
-package sirs.spykid.guardian;
+package sirs.spykid.guardian.activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -25,6 +27,12 @@ import com.sirs.guardianapp.service.QRGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import sirs.spykid.guardian.R;
+import sirs.spykid.util.Child;
+import sirs.spykid.util.GuardianToken;
+import sirs.spykid.util.ServerApiKt;
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -32,8 +40,10 @@ public class MenuActivity extends AppCompatActivity {
     private FloatingActionButton addBeaconButton;
     private ImageView image;
     private ListView listView;
+    private List<Child> children = new ArrayList<>();
+    private FirebaseUser user;
 
-
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,12 +61,7 @@ public class MenuActivity extends AppCompatActivity {
                                 Intent intent = new Intent(MenuActivity.this, MainActivity.class);
                                 startActivity(intent);
                             }
-                        }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(MenuActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                        }).addOnFailureListener(e -> Toast.makeText(MenuActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show());
 
             }
         });
@@ -69,37 +74,36 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
 
-        FirebaseUser user = getIntent().getParcelableExtra("User");
-        if(user != null) {
-            System.out.println(user.getEmail());
-        }
-        //API CALL -> get Beacons assigned to current guardian
-        final List<String> list = new ArrayList<>();
-        for(int i = 1 ; i < 5 ; i++) {
-            list.add("Beacon " + i);
-        }
+        user = getIntent().getParcelableExtra("User");
+        if(user == null) finish();
+
+        //TODO <wtf is this>
+        listChildren(new GuardianToken(2));
 
         listView = findViewById(R.id.beacon_list);
-        ArrayAdapter arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
+        ArrayAdapter arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, children);
         listView.setAdapter(arrayAdapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                intent.putExtra("Beacon user", (String) parent.getSelectedItem());
-                startActivity(intent);
-            }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+            Child child = (Child) parent.getSelectedItem();
+            //TODO -> check this
+            intent.putExtra("username", child.getUsername());
+            intent.putExtra("id", child.getId().toString());
+            startActivity(intent);
         });
 
-        //TODO: change this!!
         Bitmap bmp = QRGenerator.qrFromString("THIS IS MY SECRET KEY FOR THE CHILD BEACON APP");
         ImageView imageView = (ImageView) findViewById(R.id.qrcode_image_view);
         imageView.setImageBitmap(bmp);
         imageView.setVisibility(View.VISIBLE);
-
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void listChildren(GuardianToken token) {
+        ServerApiKt.listChildren(r -> r.match(
+                ok -> children.addAll(ok.getChildren()),
+                error -> Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
+        ), token);
+    }
 
 }

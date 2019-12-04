@@ -1,4 +1,4 @@
-package sirs.spykid.guardian;
+package sirs.spykid.guardian.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,6 +17,8 @@ import android.widget.Toast;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.SecretKey;
+
+import sirs.spykid.guardian.R;
 
 public class AddBeaconActivity extends AppCompatActivity {
 

@@ -1,11 +1,10 @@
-package sirs.spykid.guardian;
+package sirs.spykid.guardian.activity;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -20,12 +19,9 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import kotlin.Pair;
-import kotlin.Unit;
-import sirs.spykid.util.Responses;
-import sirs.spykid.util.Result;
+import sirs.spykid.guardian.R;
+import sirs.spykid.util.GuardianToken;
 import sirs.spykid.util.ServerApiKt;
 
 
@@ -33,17 +29,15 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AuthUI.IdpConfig> providers;
     private static final int MY_REQUEST_CODE = 7117;
-    Button buttonSignIn;
+    private Button buttonSignIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //Initialize providers
         providers = Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build());
 
-        //Sign In Button
         buttonSignIn = (Button) findViewById(R.id.btn_sign_in);
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -62,17 +57,21 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 //Get User
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                Toast.makeText(this, "" + user.getEmail(), Toast.LENGTH_SHORT).show();
-
-                //Switch to Menu Activity
-                Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
-                intent.putExtra("User", user);
-                startActivity(intent);
+                if(user != null)
+                    login(user);
 
             } else {
                 Toast.makeText(this, "" + idpResponse.getError().getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void startActivityAfterLogin(FirebaseUser user, GuardianToken token) {
+        Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+        intent.putExtra("User", user);
+        //TODO
+        intent.putExtra("Token", token.toString());
+        startActivity(intent);
     }
 
     private void showSignInOptions() {
@@ -84,22 +83,15 @@ public class MainActivity extends AppCompatActivity {
                         .build(), MY_REQUEST_CODE);
     }
 
-
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void login(String user, String pass) {
+    private void login(FirebaseUser user) {
         ServerApiKt.registerGuardian(r -> r.match(
-                ok -> System.out.println("Logged in! " + ok.getGuardianToken()),
-                err -> System.out.println("Error! " + err.toString())
-        ), user, pass);
+                ok -> startActivityAfterLogin(user, ok.getGuardianToken()),
+                err -> Toast.makeText(this, "Error connecting to server..." , Toast.LENGTH_SHORT).show()
+        ), user.getEmail(), user.getUid());
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void listChildren() {
-        ServerApiKt.listChildren(r -> r.match(
-                ok -> System.out.println(ok.getChildren()),
-                System.out::println
-        ), null);
-    }
+
 }
 
 
