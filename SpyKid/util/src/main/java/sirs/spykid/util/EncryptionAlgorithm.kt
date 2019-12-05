@@ -24,7 +24,7 @@ class EncryptionAlgorithm {
 
     @RequiresApi(Build.VERSION_CODES.M)
     @Throws(Exception::class)
-    fun generateSecretKey(keystoreAlias: String): KeyStore {
+    fun generateSecretKey(keystoreAlias: String): Key {
         val androidKeyStore = "AndroidKeyStore"
         val keyStore = KeyStore.getInstance(androidKeyStore)
         keyStore.load(null)
@@ -43,7 +43,7 @@ class EncryptionAlgorithm {
             )
             keyGenerator.generateKey()
         }
-        return keyStore
+        return keyStore.getKey(keystoreAlias, null)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -127,16 +127,9 @@ class Session(host: String, port: Int) {
     }
 
     private fun generateSessionKey(socket: Socket): ByteArray {
-        //Generate ephemeral value and y_a
-        val keyPair = Curve25519.getInstance(Curve25519.BEST).generateKeyPair()
-        //Send y_a
-        socket.getOutputStream().write(keyPair.publicKey)
-        // Receive y_b
-        val serverPublic = ByteArray(32)
-        socket.getInputStream().read(serverPublic)
-        // Generate shared secret
-        val cipher = Curve25519.getInstance(Curve25519.BEST)
-        return cipher.calculateAgreement(serverPublic, keyPair.privateKey)
+        val encryptionAlgorithm = EncryptionAlgorithm()
+        val key = encryptionAlgorithm.generateSecretKey("SessionKey")
+        return key.encoded
     }
 
     private class Packet private constructor(val iv: ByteArray, val payload: ByteArray) {

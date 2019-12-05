@@ -1,12 +1,14 @@
 package sirs.spykid.guardian.activity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.sirs.guardianapp.service.EncryptionService;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -14,20 +16,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.SecretKey;
 
 import sirs.spykid.guardian.R;
+import sirs.spykid.util.EncryptionAlgorithm;
 
 public class AddBeaconActivity extends AppCompatActivity {
 
     //Add Button
     //Remove?
 
-    private static final int keySize = 128;
 
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,10 +41,10 @@ public class AddBeaconActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Toast.makeText(this, "CREATE BEACON ACTIVITY", Toast.LENGTH_SHORT).show();
 
-        SecretKey key = null;
+        Key key = null;
         try {
-            key = new EncryptionService().generateSecretKey();
-        } catch (NoSuchAlgorithmException e) {
+            key = new EncryptionAlgorithm().generateSecretKey("SharedSecret");
+        } catch (Exception e) {
             e.printStackTrace();
         }
         if(key != null) {
