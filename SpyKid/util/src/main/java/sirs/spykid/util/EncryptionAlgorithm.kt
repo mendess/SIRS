@@ -12,7 +12,6 @@ import androidx.annotation.RequiresApi
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
-import org.whispersystems.curve25519.Curve25519
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.security.*
@@ -25,13 +24,13 @@ class EncryptionAlgorithm {
     @RequiresApi(Build.VERSION_CODES.M)
     @Throws(Exception::class)
     fun generateSecretKey(keystoreAlias: String): Key {
-        val androidKeyStore = "AndroidKeyStore"
+        val androidKeyStore = KeyStore.getDefaultType() //"AndroidKeyStore"
         val keyStore = KeyStore.getInstance(androidKeyStore)
         keyStore.load(null)
 
         if (!keyStore.containsAlias(keystoreAlias)) {
             val keyGenerator: KeyGenerator =
-                KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, androidKeyStore)
+                KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
             keyGenerator.init(
                 KeyGenParameterSpec.Builder(
                     keystoreAlias,
@@ -49,7 +48,7 @@ class EncryptionAlgorithm {
     @RequiresApi(Build.VERSION_CODES.M)
     @Throws(Exception::class)
     fun loadSecretKey(keystoreAlias: String, guardianKey: Key): KeyStore {
-        val androidKeyStore = "AndroidKeyStore"
+        val androidKeyStore = KeyStore.getDefaultType() //"AndroidKeyStore"
         val keyStore = KeyStore.getInstance(androidKeyStore)
         keyStore.load(null)
 
@@ -61,22 +60,25 @@ class EncryptionAlgorithm {
     }
 
     @Throws(Exception::class)
-    fun getKey(keyStore: KeyStore, keystoreAlias: String): Key {
+    fun getKey(keystoreAlias: String): Key {
+        val androidKeyStore = KeyStore.getDefaultType() //"AndroidKeyStore"
+        val keyStore = KeyStore.getInstance(androidKeyStore)
+        keyStore.load(null)
         return keyStore.getKey(keystoreAlias, null)
     }
 
-    fun encrypt(secretKey: Key, message: ByteArray): ByteArray {
-        val data = secretKey.encoded
-        val keySpec = SecretKeySpec(data, 0, data.size, "AES")
-        val cipher = Cipher.getInstance("AES")
+    fun encrypt(key: ByteArray, message: ByteArray): ByteArray {
+        val keySpec = SecretKeySpec(key, 0, key.size, "AES")
+        val cipher = Cipher.getInstance("AES/OFB/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
         return cipher.doFinal(message)
     }
 
-    fun decrypt(secretKey: Key, secret: ByteArray): ByteArray {
+    fun decrypt(key: ByteArray, secret: ByteArray): ByteArray {
+        val keySpec = SecretKeySpec(key, 0, key.size, "AES")
         val message: ByteArray
-        val cipher = Cipher.getInstance("AES")
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(ByteArray(cipher.blockSize)))
+        val cipher = Cipher.getInstance("AES/OFB/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
         message = cipher.doFinal(secret)
         return message
     }
@@ -110,13 +112,21 @@ class Session(host: String, port: Int) {
     }
 
     /**
-     * Sends a request encrypted with the shared secret
+     * Sends a request encrypted with the shared secret and the session key
      */
     internal fun request(message: String): String {
+        // Encrypt message with shared secret
+        val encryptionAlgorithm = EncryptionAlgorithm()
+        val sharedSecret = encryptionAlgorithm.getKey("SharedSecret")
+        val encryptedMessage = encryptionAlgorithm.encrypt(sharedSecret.encoded, message.toByteArray())
+
+        // Encrypt with session key TODO: check if methods from EncryptionAlgorithm class can be used
         val keySpec = SecretKeySpec(this.sessionKey, 0, this.sessionKey.size, "AES")
         val cipher = Cipher.getInstance("AES/OFB/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, keySpec)
-        val cipherText = String(Base64.getEncoder().encode(cipher.doFinal(message.toByteArray())))
+        val cipherText = String(Base64.getEncoder().encode(cipher.doFinal(encryptedMessage)))
+
+        // Construct and send packet
         val packet = JsonObject()
         packet.add("payload", JsonPrimitive(cipherText))
         packet.add("iv", JsonPrimitive(Base64.getEncoder().encodeToString(cipher.iv)))
