@@ -35,3 +35,10 @@ dependencies {
     implementation 'org.whispersystems:curve25519-android:0.2.5'
     implementation 'com.google.code.gson:gson:2.8.6'
 }
+
+android {
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
