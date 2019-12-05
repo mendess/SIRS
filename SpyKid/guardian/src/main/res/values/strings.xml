@@ -6,4 +6,8 @@
     <string name="title_activity_add_beacon">AddBeaconActivity</string>
     <string name="qrcode_desc">QR code key</string>
     <string name="menu_activtity_text">Menu Activity</string>
+    <string name="btn_add_text">Create user</string>
+    <string name="user_hint">enter username</string>
+    <string name="pass_hint">enter password</string>
+    <string name="user">username</string>
 </resources>
