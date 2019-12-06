@@ -17,35 +17,27 @@
 
     </ListView>
 
-    <Button
-        android:id="@+id/btn_sign_out"
-        android:layout_width="31dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="300dp"
-        android:layout_marginTop="59dp"
-        android:layout_marginEnd="80dp"
-        android:layout_marginBottom="672dp"
-        android:enabled="true"
-        android:text="@string/signout_button_text"
-        android:visibility="visible" />
-
-    <ImageView
-        android:id="@+id/qrcode_image_view"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:contentDescription="@string/qrcode_desc"
-        android:visibility="invisible"
-        app:srcCompat="@android:color/background_dark" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_beacon_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="33dp"
+        android:layout_marginBottom="38dp"
         android:clickable="true"
+        android:focusable="true"
         app:srcCompat="@android:drawable/btn_plus" />
+
+    <Button
+        android:id="@+id/btn_sign_out"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="49dp"
+        android:layout_marginBottom="662dp"
+        tools:text="@string/signout_button_text" />
 
 </RelativeLayout>

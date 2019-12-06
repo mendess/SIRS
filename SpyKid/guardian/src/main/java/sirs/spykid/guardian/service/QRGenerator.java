@@ -1,4 +1,4 @@
-package com.sirs.guardianapp.service;
+package sirs.spykid.guardian.service;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;

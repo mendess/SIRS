@@ -23,13 +23,14 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseUser;
-import com.sirs.guardianapp.service.QRGenerator;
+
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import sirs.spykid.guardian.R;
+import sirs.spykid.guardian.service.QRGenerator;
 import sirs.spykid.util.Child;
 import sirs.spykid.util.ChildToken;
 import sirs.spykid.util.GuardianToken;
@@ -92,10 +93,6 @@ public class MenuActivity extends AppCompatActivity {
             startMapActivity(child);
         });
 
-        Bitmap bmp = QRGenerator.qrFromString("THIS IS MY SECRET KEY FOR THE CHILD BEACON APP");
-        ImageView imageView = (ImageView) findViewById(R.id.qrcode_image_view);
-        imageView.setImageBitmap(bmp);
-        imageView.setVisibility(View.VISIBLE);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

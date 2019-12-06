@@ -1,5 +1,6 @@
 package sirs.spykid.guardian.activity;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.security.Key;
@@ -31,8 +33,11 @@ public class AddBeaconActivity extends AppCompatActivity {
     private EditText userInput;
     private EditText passInput;
     private EncryptionAlgorithm ea;
+
+    //TODO -> PASS GUARDIAN TOKEN IN INTENT
     private GuardianToken guardianToken;
-    private FirebaseDatabase database;
+    private DatabaseReference mDatabase;
+
 
 
 
@@ -45,6 +50,9 @@ public class AddBeaconActivity extends AppCompatActivity {
         userInput = findViewById(R.id.user_input);
         passInput = findViewById(R.id.password_input);
         ea = new EncryptionAlgorithm();
+        mDatabase = FirebaseDatabase.getInstance().getReference("beacons");
+        Intent intent = getIntent();
+        guardianToken = intent.getParcelableExtra("guardianToken");
 
         createUserButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.N)
@@ -84,9 +92,18 @@ public class AddBeaconActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         BeaconUser beaconUser = new BeaconUser(key, childId);
+        String id = mDatabase.push().getKey();
+        mDatabase.child(id).setValue(beaconUser);
+        showQRcode(key);
 
-        //SAVE TO DATABASE -> BEACONUSER
 
+    }
+
+    private void showQRcode(Key key) {
+        Intent intent = new Intent(getApplicationContext(), QRActivity.class);
+        intent.putExtra("key", key);
+        startActivity(intent);
+        finish();
 
     }
 

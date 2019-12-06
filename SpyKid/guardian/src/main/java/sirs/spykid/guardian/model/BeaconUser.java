@@ -12,6 +12,10 @@ public class BeaconUser {
     private Key key;
     private ChildId child;
 
+    public BeaconUser() {
+
+    }
+
     public BeaconUser(Key key, ChildId childId) {
         this.key = key;
         this.child = child;
