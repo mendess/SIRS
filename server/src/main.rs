@@ -194,8 +194,8 @@ fn main() {
         let db_clone = Arc::clone(&database);
         thread::spawn(|| {
             let _ = stream
-                .and_then(|s| {
-                    eprintln!("Received connection from {:?}", s.local_addr());
+                .and_then(|s: TcpStream| {
+                    eprintln!("Received connection from {:?}", s.peer_addr());
                     Session::start(s, db_clone)
                 })
                 .map_err(|e| eprintln!("Connection ended with: {:?}", e));
