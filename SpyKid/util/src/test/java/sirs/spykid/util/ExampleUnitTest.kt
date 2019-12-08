@@ -4,9 +4,9 @@ import org.junit.Test
 import java.time.LocalDateTime
 import java.util.*
 
-val characters = ('a'..'z').plus('A'..'Z').plus('0'..'9')
-val rng = Random()
-fun generateString(): String {
+private val characters = ('a'..'z').plus('A'..'Z').plus('0'..'9')
+private val rng = Random()
+private fun generateString(): String {
     return (0..40).map { characters[rng.nextInt(characters.size)] }.joinToString("")
 }
 

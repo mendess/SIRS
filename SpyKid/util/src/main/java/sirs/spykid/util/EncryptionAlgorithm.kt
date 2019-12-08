@@ -8,6 +8,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import android.security.keystore.KeyProperties
 import android.security.keystore.KeyGenParameterSpec
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -43,6 +44,22 @@ class EncryptionAlgorithm {
             keyGenerator.generateKey()
         }
         return keyStore.getKey(keystoreAlias, null)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    @Throws(Exception::class)
+    fun generateSessionKey(keystoreAlias: String): SecretKey {
+        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
+        val keyParam = KeyGenParameterSpec.Builder(
+            keystoreAlias,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setRandomizedEncryptionRequired(false)
+            .build()
+        keyGenerator.init(keyParam)
+        return keyGenerator.generateKey()
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -95,7 +112,7 @@ class Session(host: String, port: Int) {
         fun <T : Requests.ToJson> request(message: T): String {
             synchronized(monitor) {
                 if (!::session.isInitialized) {
-                    session = Session("localhost", 6894)
+                    session = Session("192.168.1.95", 6894)
                 }
                 return session.request(message.toJson())
             }
@@ -105,9 +122,14 @@ class Session(host: String, port: Int) {
     private val connection: Socket = Socket(host, port)
     private val connectionReader: BufferedReader
     private val sessionKey: ByteArray
+    private val challenge: ByteArray
 
     init {
-        this.sessionKey = generateSessionKey(this.connection)
+        val (key, challenge) = generateSessionKey(this.connection)
+        Log.d("INFO", "[${key.joinToString(" ,")}}]")
+        Log.d("INFO", "[${challenge.joinToString(" ,")}]")
+        this.sessionKey = key
+        this.challenge = challenge
         this.connectionReader = BufferedReader(InputStreamReader(this.connection.getInputStream()))
     }
 
@@ -115,16 +137,12 @@ class Session(host: String, port: Int) {
      * Sends a request encrypted with the shared secret and the session key
      */
     internal fun request(message: String): String {
-        // Encrypt message with shared secret
-        val encryptionAlgorithm = EncryptionAlgorithm()
-        val sharedSecret = encryptionAlgorithm.getKey("SharedSecret")
-        val encryptedMessage = encryptionAlgorithm.encrypt(sharedSecret.encoded, message.toByteArray())
-
         // Encrypt with session key TODO: check if methods from EncryptionAlgorithm class can be used
         val keySpec = SecretKeySpec(this.sessionKey, 0, this.sessionKey.size, "AES")
         val cipher = Cipher.getInstance("AES/OFB/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, keySpec)
-        val cipherText = String(Base64.getEncoder().encode(cipher.doFinal(encryptedMessage)))
+        val cipherText =
+            String(Base64.getEncoder().encode(cipher.doFinal(message.toByteArray() + this.challenge)))
 
         // Construct and send packet
         val packet = JsonObject()
@@ -136,10 +154,23 @@ class Session(host: String, port: Int) {
         return String(cipher.doFinal(response.payload))
     }
 
-    private fun generateSessionKey(socket: Socket): ByteArray {
-        val encryptionAlgorithm = EncryptionAlgorithm()
-        val key = encryptionAlgorithm.generateSecretKey("SessionKey")
-        return key.encoded
+    private fun generateSessionKey(socket: Socket): Pair<ByteArray, ByteArray> {
+        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
+        val keyParam1 = KeyGenParameterSpec.Builder(
+            "sessionKey",
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+        val keyParam2 = keyParam1.setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+        val keyParam3 = keyParam2.setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+        val keyParam4 = keyParam3.setRandomizedEncryptionRequired(false)
+        val keyParam = keyParam4.build()
+        keyGenerator.init(keyParam)
+        val key = ByteArray(32)
+        Random().nextBytes(key)
+        socket.getOutputStream().write(key)
+        val challenge = ByteArray(32)
+        socket.getInputStream().read(challenge, 0, 32)
+        return Pair(key, challenge)
     }
 
     private class Packet private constructor(val iv: ByteArray, val payload: ByteArray) {

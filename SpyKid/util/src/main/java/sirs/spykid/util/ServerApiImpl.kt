@@ -224,10 +224,10 @@ class Responses {
         companion object {
             internal fun fromJson(json: JsonElement): ListChildren =
                 ListChildren(
-                    json.asJsonObject.get("ListChildren").asJsonObject.get("children").asJsonArray.map { s -> s.asJsonObject }.map { s ->
+                    json.asJsonObject.get("ListChildren").asJsonObject.get("children").asJsonArray.map { it.asJsonObject }.map {
                         Child(
-                            ChildId(s.get("id").asInt),
-                            s.get("username").asString
+                            ChildId(it.get("id").asInt),
+                            it.get("username").asString
                         )
                     }
                 )

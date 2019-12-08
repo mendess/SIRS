@@ -2,7 +2,7 @@ mod child;
 mod guardian;
 mod location;
 
-pub use child::{ChildView, Child, ChildId};
+pub use child::{Child, ChildId, ChildView};
 pub use guardian::GuardianId;
 pub use location::Location;
 
@@ -21,7 +21,12 @@ impl Default for Db {
         let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         PgConnection::establish(&db_url)
             .map(|c| Db(Mutex::new(c)))
-            .unwrap_or_else(|_| panic!(format!("Error connecting to {}", db_url)))
+            .unwrap_or_else(|e| {
+                panic!(format!(
+                    "Error connecting to {} with error: {:?}",
+                    db_url, e
+                ))
+            })
     }
 }
 
@@ -72,7 +77,12 @@ impl Db {
             })
     }
 
-    pub fn register_new_child(&self, username: String, password: String, guardian_id: GuardianId) -> Result<ChildId> {
+    pub fn register_new_child(
+        &self,
+        username: String,
+        password: String,
+        guardian_id: GuardianId,
+    ) -> Result<ChildId> {
         #[derive(Insertable)]
         #[table_name = "children"]
         struct NewChild<'a> {

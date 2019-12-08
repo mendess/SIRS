@@ -18,6 +18,7 @@ pub enum Error {
     DecryptionFailed,
     InvalidPacketFormat,
     InvalidUsernameOrPassword,
+    InvalidChallenge,
     Other,
 }
 

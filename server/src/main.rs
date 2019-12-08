@@ -1,25 +1,22 @@
-#![allow(dead_code)]
+mod crypto;
 mod error;
-mod init_protocol;
 mod model;
 mod schema;
 
 #[macro_use]
 extern crate diesel;
 
+use crypto::{CryptoConfig, Packet};
 use error::Error;
 use model::{ChildId, ChildView, Db, GuardianId, Location};
-use openssl::symm::{self, Cipher};
-use rand::{distributions::Standard, rngs::StdRng, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use serde_json::Deserializer;
 use std::{
-    io::{self, Read, Write},
+    io::{self, Write},
     net::{TcpListener, TcpStream},
     sync::Arc,
     thread,
 };
-use x25519_dalek::SharedSecret;
 
 #[derive(Serialize, Deserialize)]
 enum Request {
@@ -110,30 +107,17 @@ impl Request {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Packet {
-    iv: String,
-    payload: String,
-}
-
 struct Session {
-    cipher: Cipher,
-    session_key: SharedSecret,
     db: Arc<Db>,
     stream: TcpStream,
+    crypto_config: CryptoConfig,
 }
 
 impl Session {
     fn start(mut stream: TcpStream, db: Arc<Db>) -> Result<(), io::Error> {
-        let mut client_key = [0_u8; 32];
-        stream.read_exact(&mut client_key)?;
         let mut session = Self {
-            cipher: Cipher::aes_256_ofb(),
-            session_key: init_protocol::exchange_dh(
-                x25519_dalek::PublicKey::from(client_key),
-                &mut stream,
-            )?,
             db,
+            crypto_config: CryptoConfig::new(&mut stream)?,
             stream,
         };
         for packet in Deserializer::from_reader(session.stream.try_clone()?).into_iter() {
@@ -147,40 +131,14 @@ impl Session {
     }
 
     fn read_request(&mut self, packet: Packet) -> Result<Request, Error> {
-        let iv = base64::decode(&packet.iv)?;
-        let payload = base64::decode(&packet.payload)?;
-        let thing = symm::decrypt(
-            self.cipher,
-            self.session_key.as_bytes(),
-            Some(&iv),
-            &payload,
-        )?;
+        let thing = packet.decrypt(&self.crypto_config)?;
         eprintln!("payload: {}", std::str::from_utf8(&thing).unwrap());
-        Ok(serde_json::from_slice(&thing).map_err(|e| {
-            eprintln!("Wut?");
-            e
-        })?)
+        Ok(serde_json::from_slice(&thing)?)
     }
 
     fn write_response(&mut self, response: Result<Response, Error>) -> Result<(), io::Error> {
-        let rng = StdRng::from_seed(Default::default());
-        let iv = rng.sample_iter(Standard).take(16).collect::<Vec<u8>>();
         let payload = serde_json::to_vec(&response).expect("Couldn't serialize response");
-        eprintln!(
-            "Sending response: {}",
-            serde_json::to_string_pretty(&response).unwrap()
-        );
-        let payload = symm::encrypt(
-            self.cipher,
-            self.session_key.as_bytes(),
-            Some(&iv),
-            &payload,
-        )
-        .expect("Couldn't encrypt message");
-        let packet = Packet {
-            payload: base64::encode(&payload),
-            iv: base64::encode(&iv),
-        };
+        let packet = Packet::new(payload, &self.crypto_config);
         serde_json::to_writer(&self.stream, &packet)?;
         self.stream.write_all(&[b'\n'])?;
         Ok(())
@@ -190,6 +148,7 @@ impl Session {
 fn main() {
     let database = Arc::new(Db::default());
     let listener = TcpListener::bind("0.0.0.0:6894").unwrap();
+    eprintln!("Server started, listening on port 6894");
     for stream in listener.incoming() {
         let db_clone = Arc::clone(&database);
         thread::spawn(|| {
@@ -203,13 +162,8 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn show_api() {
-    let r = Packet {
-        payload: "base64".into(),
-        iv: "00000".into(),
-    };
-    println!("Packet: {}", serde_json::to_string_pretty(&r).unwrap());
-
     let r = Request::RegisterGuardian {
         username: "user".into(),
         password: "pass".into(),
