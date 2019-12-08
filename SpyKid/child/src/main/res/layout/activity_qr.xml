@@ -7,7 +7,7 @@
     tools:context=".activity.QRActivity">
 
     <ImageView
-        android:id="@+id/qr_image"
+        android:id="@+id/qr_scan"
         android:layout_width="218dp"
         android:layout_height="264dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -16,5 +16,12 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@android:color/black"
         android:visibility="invisible"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/scan"
+        android:text="Scan"
+        tools:ignore="MissingConstraints" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
