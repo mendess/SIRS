@@ -35,10 +35,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private GuardianToken guardianToken;
     private Child child;
-    private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
 
-    //TODO get private key from database
-    private SecretKey key;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,16 +53,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         //Call AsyncTask
         new LocationBackgroundTask().execute();
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void updateLocation(List<Location> locations) {
         Location location = locations.get(0);
         LatLng position = new LatLng(location.getX(), location.getY());
+        mMap.clear();
         mMap.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(position));
     }
