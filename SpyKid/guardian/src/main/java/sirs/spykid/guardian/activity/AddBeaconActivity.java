@@ -74,10 +74,10 @@ public class AddBeaconActivity extends AppCompatActivity {
             Toast.makeText(this, "Invalid input, try again...", Toast.LENGTH_SHORT).show();
         }
         else {
-            ServerApiKt.registerChild(r -> r.match(
+            ServerApiKt.registerChild(guardianToken, username, password, r -> r.match(
                     ok  -> saveChild(ok.getChildId()),
                     err -> Toast.makeText(this, "Error registering child, please try again...", Toast.LENGTH_SHORT).show()
-            ),guardianToken, username, password);
+            ));
 
         }
 

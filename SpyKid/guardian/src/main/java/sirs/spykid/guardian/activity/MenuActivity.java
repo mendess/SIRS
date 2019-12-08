@@ -97,10 +97,10 @@ public class MenuActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void listChildren(GuardianToken token) {
-        ServerApiKt.listChildren(r -> r.match(
+        ServerApiKt.listChildren(token, r -> r.match(
                 ok -> children.addAll(ok.getChildren()),
                 error -> Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
-        ), token);
+        ));
     }
 
     private void startMapActivity(Child child) {

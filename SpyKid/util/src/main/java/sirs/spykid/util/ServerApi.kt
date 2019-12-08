@@ -140,63 +140,63 @@ data class Child internal constructor(val id: ChildId, val username: String) : P
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun registerGuardian(
-    callback: Consumer<Result<Responses.RegisterGuardian, Responses.Error>>,
     username: String,
-    password: String
+    password: String,
+    callback: Consumer<Result<Responses.RegisterGuardian, Responses.Error>>
 ) {
     RegisterGuardian(callback::accept).execute(Pair(username, password))
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginGuardian(
-    callback: Consumer<Result<Responses.LoginGuardian, Responses.Error>>,
     username: String,
-    password: String
+    password: String,
+    callback: Consumer<Result<Responses.LoginGuardian, Responses.Error>>
 ) {
     LoginGuardian(callback::accept).execute(Pair(username, password))
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun registerChild(
-    callback: Consumer<Result<Responses.RegisterChild, Responses.Error>>,
     guardianToken: GuardianToken,
     username: String,
-    password: String
+    password: String,
+    callback: Consumer<Result<Responses.RegisterChild, Responses.Error>>
 ) {
     RegisterChild(callback::accept).execute(Triple(guardianToken, username, password))
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginChild(
-    callback: Consumer<Result<Responses.LoginChild, Responses.Error>>,
     username: String,
-    password: String
+    password: String,
+    callback: Consumer<Result<Responses.LoginChild, Responses.Error>>
 ) {
     LoginChild(callback::accept).execute(Pair(username, password))
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun listChildren(
-    callback: Consumer<Result<Responses.ListChildren, Responses.Error>>,
-    guardianToken: GuardianToken
+    guardianToken: GuardianToken,
+    callback: Consumer<Result<Responses.ListChildren, Responses.Error>>
 ) {
     ListChildren(callback::accept).execute(guardianToken)
 }
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun childLocation(
-    callback: Consumer<Result<Responses.ChildLocation, Responses.Error>>,
     guardianToken: GuardianToken,
-    childToken: ChildId
+    childToken: ChildId,
+    callback: Consumer<Result<Responses.ChildLocation, Responses.Error>>
 ) {
     ChildLocation(callback::accept).execute(Pair(guardianToken, childToken))
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun updateChildLocation(
-    callback: Consumer<Result<Responses.UpdateChildLocation, Responses.Error>>,
     childToken: ChildToken,
-    location: Location
+    location: Location,
+    callback: Consumer<Result<Responses.UpdateChildLocation, Responses.Error>>
 ) {
     UpdateChildLocation(callback::accept).execute(Pair(childToken, location))
 }

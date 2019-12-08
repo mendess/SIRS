@@ -84,10 +84,10 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void login(FirebaseUser user) {
-        ServerApiKt.registerGuardian(r -> r.match(
+        ServerApiKt.registerGuardian(user.getEmail(), user.getUid(), r -> r.match(
                 ok -> startActivityAfterLogin(user, ok.getGuardianToken()),
                 err -> Toast.makeText(this, "Error connecting to server..." , Toast.LENGTH_SHORT).show()
-        ), user.getEmail(), user.getUid());
+        ));
     }
 
 
