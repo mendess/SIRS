@@ -45,51 +45,6 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
     }
 
 }
-
-data class GuardianToken(internal val id: Int) : Parcelable {
-    constructor(parcel: Parcel) : this(parcel.readInt())
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<GuardianToken> {
-        override fun createFromParcel(parcel: Parcel): GuardianToken {
-            return GuardianToken(parcel)
-        }
-
-        override fun newArray(size: Int): Array<GuardianToken?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
-
-data class ChildToken(internal val id: Int) : Parcelable {
-    constructor(parcel: Parcel) : this(parcel.readInt())
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<ChildToken> {
-        override fun createFromParcel(parcel: Parcel): ChildToken {
-            return ChildToken(parcel)
-        }
-
-        override fun newArray(size: Int): Array<ChildToken?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
-
 data class ChildId(internal val id: Int) : Parcelable {
     constructor(parcel: Parcel) : this(parcel.readInt())
 
@@ -143,60 +98,41 @@ fun registerGuardian(
     username: String,
     password: String,
     callback: Consumer<Result<Responses.RegisterGuardian, Responses.Error>>
-) {
-    RegisterGuardian(callback::accept).execute(Pair(username, password))
-}
+) = RegisterGuardian(callback::accept).execute(Pair(username, password))!!
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginGuardian(
     username: String,
     password: String,
     callback: Consumer<Result<Responses.LoginGuardian, Responses.Error>>
-) {
-    LoginGuardian(callback::accept).execute(Pair(username, password))
-}
+) = LoginGuardian(callback::accept).execute(Pair(username, password))!!
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun registerChild(
-    guardianToken: GuardianToken,
     username: String,
     password: String,
     callback: Consumer<Result<Responses.RegisterChild, Responses.Error>>
-) {
-    RegisterChild(callback::accept).execute(Triple(guardianToken, username, password))
-}
+) = RegisterChild(callback::accept).execute(Pair(username, password))!!
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun loginChild(
     username: String,
     password: String,
     callback: Consumer<Result<Responses.LoginChild, Responses.Error>>
-) {
-    LoginChild(callback::accept).execute(Pair(username, password))
-}
+) = LoginChild(callback::accept).execute(Pair(username, password))!!
 
 @RequiresApi(Build.VERSION_CODES.N)
-fun listChildren(
-    guardianToken: GuardianToken,
-    callback: Consumer<Result<Responses.ListChildren, Responses.Error>>
-) {
-    ListChildren(callback::accept).execute(guardianToken)
-}
+fun listChildren(callback: Consumer<Result<Responses.ListChildren, Responses.Error>>) =
+    ListChildren(callback::accept).execute()!!
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun childLocation(
-    guardianToken: GuardianToken,
     childToken: ChildId,
     callback: Consumer<Result<Responses.ChildLocation, Responses.Error>>
-) {
-    ChildLocation(callback::accept).execute(Pair(guardianToken, childToken))
-}
+) = ChildLocation(callback::accept).execute(childToken)!!
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun updateChildLocation(
-    childToken: ChildToken,
     location: Location,
     callback: Consumer<Result<Responses.UpdateChildLocation, Responses.Error>>
-) {
-    UpdateChildLocation(callback::accept).execute(Pair(childToken, location))
-}
+) = UpdateChildLocation(callback::accept).execute(location)!!

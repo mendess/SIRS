@@ -1,14 +1,11 @@
 package sirs.spykid.util
 
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
-
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import org.junit.Assert.*
 import java.time.LocalDateTime
 import java.util.*
+import java.util.function.Consumer
 
 private val characters = ('a'..'z').plus('A'..'Z').plus('0'..'9')
 private val rng = Random()
@@ -25,52 +22,50 @@ private fun generateString(): String {
 class ExampleInstrumentedTest {
     @Test
     fun register() {
-        RegisterGuardian.run(generateString(), generateString()).unwrap()
+        registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
     }
 
     @Test
     fun login() {
         val username = generateString()
         val password = generateString()
-        RegisterGuardian.run(username, password).unwrap()
-        LoginGuardian.run(username, password).unwrap()
+        registerGuardian(username, password, Consumer {}).get().unwrap()
+        loginGuardian(username, password, Consumer {}).get().unwrap()
     }
 
     @Test
     fun registerChild() {
-        val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
-        RegisterChild.run(gid.guardianToken, generateString(), generateString()).unwrap()
+        registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
+        registerChild(generateString(), generateString(), Consumer {}).get().unwrap()
     }
 
     @Test
     fun listChildren() {
-        val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
-        val cid =
-            RegisterChild.run(gid.guardianToken, generateString(), generateString()).unwrap()
-        val l = ListChildren.run(gid.guardianToken).unwrap()
-        assert(l.children.any { c -> c.id == cid.childId })
+        registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
+        registerChild(generateString(), generateString(), Consumer {}).get().unwrap()
+        val c = listChildren(Consumer {}).get().unwrap()
+        assert(c.children.isNotEmpty())
     }
 
     @Test
     fun getLocation() {
-        val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
-        val cid =
-            RegisterChild.run(gid.guardianToken, generateString(), generateString()).unwrap()
-        ChildLocation.run(gid.guardianToken, cid.childId).unwrap()
+        registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
+        val cid = registerChild(generateString(), generateString(), Consumer {}).get().unwrap()
+        childLocation(cid.childId, Consumer {}).get().unwrap()
     }
 
     @Test
     fun updateChildLocation() {
-        val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
-        val username = generateString()
-        val password = generateString()
-        val cid = RegisterChild.run(gid.guardianToken, username, password).unwrap()
-        val ctk = LoginChild.run(username, password).unwrap()
-        UpdateChildLocation.run(
-            ctk.childToken,
-            Location(2.3, 4.5, LocalDateTime.now())
-        ).unwrap()
-        val l = ChildLocation.run(gid.guardianToken, cid.childId).unwrap()
+        val guardianUsername = generateString()
+        val guardianPassword = generateString()
+        registerGuardian(guardianUsername, guardianPassword, Consumer {}).get().unwrap()
+        val childUsername = generateString()
+        val childPassword = generateString()
+        val cid = registerChild(childUsername, childPassword, Consumer {}).get().unwrap()
+        loginChild(childUsername, childPassword, Consumer {}).get().unwrap()
+        updateChildLocation(Location(2.3, 4.5, LocalDateTime.now()), Consumer {}).get().unwrap()
+        loginGuardian(guardianUsername, guardianPassword, Consumer {}).get().unwrap()
+        val l = childLocation(cid.childId, Consumer {}).get().unwrap()
         assert(l.locations.any {
             it.x > 2.0 && it.x < 3.0
                     && it.y > 4.0 && it.y < 5.0
@@ -80,10 +75,10 @@ class ExampleInstrumentedTest {
 
     @Test
     fun loginChild() {
-        val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
+        registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
         val username = generateString()
         val password = generateString()
-        RegisterChild.run(gid.guardianToken, username, password).unwrap()
-        LoginChild.run(username, password).unwrap()
+        registerChild(username, password, Consumer {}).get()
+        loginChild(username, password, Consumer {}).get()
     }
 }

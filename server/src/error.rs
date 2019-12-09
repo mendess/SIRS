@@ -9,16 +9,17 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum Error {
-    InvalidChild,
-    InvalidGuardian,
-    NotGuarding,
     AlreadyGuarding,
-    InvalidChildOrGuardian,
     CouldntDecodeB64,
     DecryptionFailed,
+    InvalidChallenge,
+    InvalidChild,
+    InvalidChildOrGuardian,
+    InvalidGuardian,
     InvalidPacketFormat,
     InvalidUsernameOrPassword,
-    InvalidChallenge,
+    NotGuarding,
+    NotLoggedIn,
     Other,
 }
 

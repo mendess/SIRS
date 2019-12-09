@@ -32,15 +32,15 @@ class ExampleUnitTest {
     @Test
     fun registerChild() {
         val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
-        RegisterChild.run(gid.guardianToken, generateString(), generateString()).unwrap()
+        RegisterChild.run(generateString(), generateString()).unwrap()
     }
 
     @Test
     fun listChildren() {
         val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
         val cid =
-            RegisterChild.run(gid.guardianToken, generateString(), generateString()).unwrap()
-        val l = ListChildren.run(gid.guardianToken).unwrap()
+            RegisterChild.run(generateString(), generateString()).unwrap()
+        val l = ListChildren.run().unwrap()
         assert(l.children.any { c -> c.id == cid.childId })
     }
 
@@ -48,8 +48,8 @@ class ExampleUnitTest {
     fun getLocation() {
         val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
         val cid =
-            RegisterChild.run(gid.guardianToken, generateString(), generateString()).unwrap()
-        ChildLocation.run(gid.guardianToken, cid.childId).unwrap()
+            RegisterChild.run(generateString(), generateString()).unwrap()
+        ChildLocation.run(cid.childId).unwrap()
     }
 
     @Test
@@ -57,13 +57,12 @@ class ExampleUnitTest {
         val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
         val username = generateString()
         val password = generateString()
-        val cid = RegisterChild.run(gid.guardianToken, username, password).unwrap()
+        val cid = RegisterChild.run(username, password).unwrap()
         val ctk = LoginChild.run(username, password).unwrap()
         UpdateChildLocation.run(
-            ctk.childToken,
             Location(2.3, 4.5, LocalDateTime.now())
         ).unwrap()
-        val l = ChildLocation.run(gid.guardianToken, cid.childId).unwrap()
+        val l = ChildLocation.run(cid.childId).unwrap()
         assert(l.locations.any {
             it.x > 2.0 && it.x < 3.0
                     && it.y > 4.0 && it.y < 5.0
@@ -76,7 +75,7 @@ class ExampleUnitTest {
         val gid = RegisterGuardian.run(generateString(), generateString()).unwrap()
         val username = generateString()
         val password = generateString()
-        RegisterChild.run(gid.guardianToken, username, password).unwrap()
+        RegisterChild.run(username, password).unwrap()
         LoginChild.run(username, password).unwrap()
     }
 }

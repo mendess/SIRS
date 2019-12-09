@@ -7,6 +7,7 @@ mod schema;
 extern crate diesel;
 
 use crypto::{CryptoConfig, Packet};
+use either::Either::{self, Left, Right};
 use error::Error;
 use model::{ChildId, ChildView, Db, GuardianId, Location};
 use serde::{Deserialize, Serialize};
@@ -20,34 +21,13 @@ use std::{
 
 #[derive(Serialize, Deserialize)]
 enum Request {
-    RegisterGuardian {
-        username: String,
-        password: String,
-    },
-    LoginGuardian {
-        username: String,
-        password: String,
-    },
-    RegisterChild {
-        guardian: GuardianId,
-        username: String,
-        password: String,
-    },
-    LoginChild {
-        username: String,
-        password: String,
-    },
-    ChildLocation {
-        guardian: GuardianId,
-        child: ChildId,
-    },
-    ListChildren {
-        guardian: GuardianId,
-    },
-    UpdateChildLocation {
-        child: ChildId,
-        location: String,
-    },
+    RegisterGuardian { username: String, password: String },
+    LoginGuardian { username: String, password: String },
+    RegisterChild { username: String, password: String },
+    LoginChild { username: String, password: String },
+    ChildLocation { child: ChildId },
+    ListChildren,
+    UpdateChildLocation { location: String },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -58,51 +38,42 @@ enum Response {
     LoginChild { id: ChildId },
     ChildLocation { locations: Vec<String> },
     ListChildren { children: Vec<ChildView> },
-    UpdateChildLocation,
+    Success,
 }
 
 impl Request {
-    #[allow(unused_variables)]
-    fn serve(self, db: &Db) -> Result<Response, Error> {
-        use Request::*;
-        use Response as R;
-        match self {
-            RegisterGuardian {
-                username: u,
-                password: p,
-            } => db
-                .register_new_guardian(u, p)
-                .map(|id| R::RegisterGuardian { id }),
-            LoginGuardian {
-                username: u,
-                password: p,
-            } => db.login_guardian(u, p).map(|id| R::LoginGuardian { id }),
-            RegisterChild {
-                guardian: g,
-                username: u,
-                password: p,
-            } => db
-                .register_new_child(u, p, g)
-                .map(|id| R::RegisterChild { id }),
-            LoginChild {
-                username: u,
-                password: p,
-            } => db.login_child(u, p).map(|id| R::LoginChild { id }),
-            ChildLocation {
-                guardian: g,
-                child: c,
-            } => db.child_location(c, g).map(|v| R::ChildLocation {
-                locations: v.into_iter().map(|l| l.into_blob()).collect(),
-            }),
-            ListChildren { guardian: g } => {
-                db.list_children(g).map(|l| R::ListChildren { children: l })
+    fn serve(
+        self,
+        db: &Db,
+        logged_in: Option<Either<GuardianId, ChildId>>,
+    ) -> Result<Response, Error> {
+        use Request as R;
+        use Response::*;
+        match (self, logged_in) {
+            (R::RegisterGuardian { username, password }, _) => db
+                .register_new_guardian(username, password)
+                .map(|id| RegisterGuardian { id }),
+            (R::LoginGuardian { username, password }, _) => db
+                .login_guardian(username, password)
+                .map(|id| LoginGuardian { id }),
+            (R::RegisterChild { username, password }, Some(Left(g))) => db
+                .register_new_child(username, password, g)
+                .map(|id| RegisterChild { id }),
+            (R::LoginChild { username, password }, _) => db
+                .login_child(username, password)
+                .map(|id| LoginChild { id }),
+            (R::ChildLocation { child }, Some(Left(g))) => {
+                db.child_location(child, g).map(|v| ChildLocation {
+                    locations: v.into_iter().map(|l| l.into_blob()).collect(),
+                })
             }
-            UpdateChildLocation {
-                child: c,
-                location: l,
-            } => db
-                .update_child_location(Location::new(c, l))
-                .map(|_| R::UpdateChildLocation),
+            (R::ListChildren, Some(Left(g))) => {
+                db.list_children(g).map(|l| ListChildren { children: l })
+            }
+            (R::UpdateChildLocation { location }, Some(Right(c))) => db
+                .update_child_location(Location::new(c, location))
+                .map(|_| Success),
+            _ => Err(Error::NotLoggedIn),
         }
     }
 }
@@ -111,6 +82,7 @@ struct Session {
     db: Arc<Db>,
     stream: TcpStream,
     crypto_config: CryptoConfig,
+    logged_in: Option<Either<GuardianId, ChildId>>,
 }
 
 impl Session {
@@ -119,12 +91,25 @@ impl Session {
             db,
             crypto_config: CryptoConfig::new(&mut stream)?,
             stream,
+            logged_in: None,
         };
         for packet in Deserializer::from_reader(session.stream.try_clone()?).into_iter() {
-            let response = packet
+            let mut response = packet
                 .map_err(Error::from)
                 .and_then(|p| session.read_request(p))
-                .and_then(|r| r.serve(&session.db));
+                .and_then(|r| r.serve(&session.db, session.logged_in));
+            use Response::*;
+            session.logged_in = match response {
+                Ok(RegisterGuardian { id }) | Ok(LoginGuardian { id }) => {
+                    response = Ok(Success);
+                    Some(Left(id))
+                }
+                Ok(LoginChild { id }) => {
+                    response = Ok(Success);
+                    Some(Right(id))
+                }
+                _ => session.logged_in,
+            };
             session.write_response(response)?;
         }
         Ok(())
@@ -173,7 +158,6 @@ fn show_api() {
     println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
 
     let r = Request::RegisterChild {
-        guardian: 1.into(),
         username: "child".into(),
         password: "passchild".into(),
     };
@@ -181,17 +165,14 @@ fn show_api() {
     let r = Response::RegisterChild { id: 1.into() };
     println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
 
-    let r = Request::ChildLocation {
-        guardian: 1.into(),
-        child: 1.into(),
-    };
+    let r = Request::ChildLocation { child: 1.into() };
     println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
     let r = Response::ChildLocation {
         locations: vec!["some encryted blob".into(), "gibberish".into()],
     };
     println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
 
-    let r = Request::ListChildren { guardian: 1.into() };
+    let r = Request::ListChildren;
     println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
     let r = Response::ListChildren {
         children: vec![
@@ -208,10 +189,9 @@ fn show_api() {
     println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
 
     let r = Request::UpdateChildLocation {
-        child: 1.into(),
         location: "some encryted blob".into(),
     };
     println!("Request: {}", serde_json::to_string_pretty(&r).unwrap());
-    let r = Response::UpdateChildLocation;
+    let r = Response::Success;
     println!("Response: {}", serde_json::to_string_pretty(&r).unwrap());
 }

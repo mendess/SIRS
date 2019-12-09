@@ -1,13 +1,8 @@
 package sirs.spykid.util
 
 import android.os.Build
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
-import android.security.keystore.KeyProperties
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.gson.JsonObject
@@ -15,9 +10,15 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.security.*
 import java.net.Socket
+import java.security.Key
+import java.security.KeyStore
 import java.util.*
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
 
 class EncryptionAlgorithm {

@@ -1,9 +1,5 @@
 package sirs.spykid.guardian.activity;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,9 +7,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -21,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import sirs.spykid.guardian.R;
-import sirs.spykid.util.GuardianToken;
 import sirs.spykid.util.ServerApiKt;
 
 
@@ -38,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         //Initialize providers
         providers = Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build());
 
-        buttonSignIn = (Button) findViewById(R.id.btn_sign_in);
+        buttonSignIn = findViewById(R.id.btn_sign_in);
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,10 +64,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startActivityAfterLogin(FirebaseUser user, GuardianToken token) {
+    private void startActivityAfterLogin(FirebaseUser user) {
         Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
         intent.putExtra("user", user);
-        intent.putExtra("guardianToken", token);
         startActivity(intent);
     }
 
@@ -85,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void login(FirebaseUser user) {
         ServerApiKt.registerGuardian(user.getEmail(), user.getUid(), r -> r.match(
-                ok -> startActivityAfterLogin(user, ok.getGuardianToken()),
+                ok -> startActivityAfterLogin(user),
                 err -> Toast.makeText(this, "Error connecting to server..." , Toast.LENGTH_SHORT).show()
         ));
     }

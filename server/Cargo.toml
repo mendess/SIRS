@@ -16,3 +16,4 @@ openssl = { version = "0.10", features = ["vendored"] }
 once_cell = "*"
 x25519-dalek = "*"
 base64 = "*"
+either = "*"

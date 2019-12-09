@@ -17,14 +17,10 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.security.Key;
 
-import javax.crypto.SecretKey;
-
 import sirs.spykid.guardian.R;
 import sirs.spykid.guardian.model.BeaconUser;
-import sirs.spykid.util.Child;
 import sirs.spykid.util.ChildId;
 import sirs.spykid.util.EncryptionAlgorithm;
-import sirs.spykid.util.GuardianToken;
 import sirs.spykid.util.ServerApiKt;
 
 public class AddBeaconActivity extends AppCompatActivity {
@@ -35,10 +31,7 @@ public class AddBeaconActivity extends AppCompatActivity {
     private EncryptionAlgorithm ea;
 
     //TODO -> PASS GUARDIAN TOKEN IN INTENT
-    private GuardianToken guardianToken;
     private DatabaseReference mDatabase;
-
-
 
 
     @Override
@@ -52,7 +45,6 @@ public class AddBeaconActivity extends AppCompatActivity {
         ea = new EncryptionAlgorithm();
         mDatabase = FirebaseDatabase.getInstance().getReference("beacons");
         Intent intent = getIntent();
-        guardianToken = intent.getParcelableExtra("guardianToken");
 
         createUserButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.N)
@@ -70,12 +62,11 @@ public class AddBeaconActivity extends AppCompatActivity {
         String username = userInput.getText().toString();
         String password = passInput.getText().toString();
 
-        if(TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Invalid input, try again...", Toast.LENGTH_SHORT).show();
-        }
-        else {
-            ServerApiKt.registerChild(guardianToken, username, password, r -> r.match(
-                    ok  -> saveChild(ok.getChildId()),
+        } else {
+            ServerApiKt.registerChild(username, password, r -> r.match(
+                    ok -> saveChild(ok.getChildId()),
                     err -> Toast.makeText(this, "Error registering child, please try again...", Toast.LENGTH_SHORT).show()
             ));
 
