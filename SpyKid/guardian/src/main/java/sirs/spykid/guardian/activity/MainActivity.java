@@ -3,7 +3,7 @@ package sirs.spykid.guardian.activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,11 +23,11 @@ import sirs.spykid.guardian.R;
 import sirs.spykid.util.ServerApiKt;
 
 
+@RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity {
 
     private List<AuthUI.IdpConfig> providers;
     private static final int MY_REQUEST_CODE = 7117;
-    private Button buttonSignIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +36,15 @@ public class MainActivity extends AppCompatActivity {
         //Initialize providers
         providers = Collections.singletonList(new AuthUI.IdpConfig.GoogleBuilder().build());
 
-        buttonSignIn = findViewById(R.id.btn_sign_in);
-        buttonSignIn.setOnClickListener(v -> showSignInOptions());
+        findViewById(R.id.firebase_signin).setOnClickListener(v -> showSignInOptions());
+        findViewById(R.id.signin).setOnClickListener(v -> normalSignIn(
+                this.<EditText>findViewById(R.id.username).getText().toString(),
+                this.<EditText>findViewById(R.id.password).getText().toString()
+        ));
+        findViewById(R.id.signup).setOnClickListener(v -> normalSignUp(
+                this.<EditText>findViewById(R.id.username).getText().toString(),
+                this.<EditText>findViewById(R.id.password).getText().toString()
+        ));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -72,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    private void startActivityAfterLogin() {
+        Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+        startActivity(intent);
+    }
+
     private void showSignInOptions() {
         startActivityForResult(
                 AuthUI.getInstance()
@@ -90,7 +102,21 @@ public class MainActivity extends AppCompatActivity {
         ));
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void normalSignUp(@NonNull String user, String password) {
+        Toast.makeText(this, "User" + user + " Password " + password, Toast.LENGTH_SHORT).show();
+        ServerApiKt.registerGuardian(user, password, r -> r.match(
+                ok -> startActivityAfterLogin(),
+                err -> Toast.makeText(this, "Error connecting to server...", Toast.LENGTH_SHORT).show()
+        ));
+    }
 
+    private void normalSignIn(String user, String password) {
+        ServerApiKt.loginGuardian(user, password, r -> r.match(
+                ok -> startActivityAfterLogin(),
+                err -> Toast.makeText(this, "Error connecting to server...", Toast.LENGTH_SHORT).show()
+        ));
+    }
 }
 
 

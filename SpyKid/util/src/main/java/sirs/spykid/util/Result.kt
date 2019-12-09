@@ -32,13 +32,6 @@ interface Result<T, E> {
             }
         }
     }
-
-    // TODO: Could not be implemented
-    //
-    // Option<Result<T, E>> transpose();
-    // Result<T, E> clone();
-    // T unwrap_or_default();
-    // int compareTo(Result<T, E> o);
 }
 
 @RequiresApi(api = Build.VERSION_CODES.N)

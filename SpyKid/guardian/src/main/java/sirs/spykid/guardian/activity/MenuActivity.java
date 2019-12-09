@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,7 @@ public class MenuActivity extends AppCompatActivity {
     private ListView listView;
 
     private List<Child> children = new ArrayList<>();
-    private FirebaseUser user;
+//    private FirebaseUser user;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -55,9 +54,11 @@ public class MenuActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+/*
         user = getIntent().getParcelableExtra("user");
         if(user == null)
             Toast.makeText(this, "Invalid user and/or guardian token", Toast.LENGTH_SHORT).show();
+*/
 
         listChildren();
         listView = findViewById(R.id.beacon_list);
@@ -75,7 +76,7 @@ public class MenuActivity extends AppCompatActivity {
     private void listChildren() {
         ServerApiKt.listChildren(r -> r.match(
                 ok -> children.addAll(ok.getChildren()),
-                error -> Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
+                error -> Toast.makeText(this, "Error listing children", Toast.LENGTH_SHORT).show()
         ));
     }
 
