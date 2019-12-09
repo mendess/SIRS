@@ -22,6 +22,9 @@ interface Result<T, E> {
     fun expect(s: String): T
     fun expectErr(s: String): E
     fun match(ok: Consumer<T>, err: Consumer<E>)
+    fun match(ok: (T) -> Unit, err: (E) -> Unit) {
+        this.match(Consumer(ok), Consumer(err))
+    }
 
     companion object {
         fun <T> catch(f: () -> T): Result<T, Exception> {
