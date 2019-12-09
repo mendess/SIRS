@@ -15,19 +15,17 @@ import sirs.spykid.guardian.service.QRGenerator;
 
 public class QRActivity extends AppCompatActivity {
 
-    private ImageView qrImage;
-    private Key key;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
-        qrImage = findViewById(R.id.qr_image);
+        ImageView qrImage = findViewById(R.id.qr_image);
         Intent intent = getIntent();
-        key = (Key)intent.getSerializableExtra("key");
-        Bitmap bmp = QRGenerator.qrFromString(key.getEncoded().toString());
-        qrImage.setImageBitmap(bmp);
-        qrImage.setVisibility(View.VISIBLE);
-
+        Key key = (Key) intent.getSerializableExtra("key");
+        if(key != null) {
+            Bitmap bmp = QRGenerator.qrFromString(key.getEncoded().toString());
+            qrImage.setImageBitmap(bmp);
+            qrImage.setVisibility(View.VISIBLE);
+        }
     }
 }

@@ -30,7 +30,6 @@ public class AddBeaconActivity extends AppCompatActivity {
     private EditText passInput;
     private EncryptionAlgorithm ea;
 
-    //TODO -> PASS GUARDIAN TOKEN IN INTENT
     private DatabaseReference mDatabase;
 
 
@@ -76,18 +75,17 @@ public class AddBeaconActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void saveChild(ChildId childId) {
-        Key key = null;
         try {
-            key = ea.generateSecretKey("SharedSecret");
+            Key key = ea.generateSecretKey("SharedSecret");
+            BeaconUser beaconUser = new BeaconUser(key, childId);
+            String id = mDatabase.push().getKey();
+            if(id != null) {
+                mDatabase.child(id).setValue(beaconUser);
+                showQRcode(key);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        BeaconUser beaconUser = new BeaconUser(key, childId);
-        String id = mDatabase.push().getKey();
-        mDatabase.child(id).setValue(beaconUser);
-        showQRcode(key);
-
-
     }
 
     private void showQRcode(Key key) {
@@ -95,7 +93,6 @@ public class AddBeaconActivity extends AppCompatActivity {
         intent.putExtra("key", key);
         startActivity(intent);
         finish();
-
     }
 
 

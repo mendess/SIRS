@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import sirs.spykid.guardian.R;
@@ -34,15 +36,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //Initialize providers
-        providers = Arrays.asList(new AuthUI.IdpConfig.GoogleBuilder().build());
+        providers = Collections.singletonList(new AuthUI.IdpConfig.GoogleBuilder().build());
 
         buttonSignIn = findViewById(R.id.btn_sign_in);
-        buttonSignIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSignInOptions();
-            }
-        });
+        buttonSignIn.setOnClickListener(v -> showSignInOptions());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -55,11 +52,18 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 //Get User
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if(user != null)
+                if (user != null) {
                     login(user);
+                } else {
+                    Toast.makeText(this, "Failed to authenticate", Toast.LENGTH_SHORT).show();
+                }
 
             } else {
-                Toast.makeText(this, "" + idpResponse.getError().getMessage(), Toast.LENGTH_SHORT).show();
+                if (idpResponse != null && idpResponse.getError() != null) {
+                    Toast.makeText(this, idpResponse.getError().getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "idpResponse is null", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -80,10 +84,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void login(FirebaseUser user) {
+    private void login(@NonNull FirebaseUser user) {
+        //noinspection ConstantConditions
         ServerApiKt.registerGuardian(user.getEmail(), user.getUid(), r -> r.match(
                 ok -> startActivityAfterLogin(user),
-                err -> Toast.makeText(this, "Error connecting to server..." , Toast.LENGTH_SHORT).show()
+                err -> Toast.makeText(this, "Error connecting to server...", Toast.LENGTH_SHORT).show()
         ));
     }
 

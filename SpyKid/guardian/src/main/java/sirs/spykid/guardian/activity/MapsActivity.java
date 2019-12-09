@@ -1,9 +1,10 @@
 package sirs.spykid.guardian.activity;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.FragmentActivity;
@@ -39,15 +40,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         child = intent.getParcelableExtra("child");
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         //Call AsyncTask
-        new LocationBackgroundTask().execute();
+        startLocationListener();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void updateLocation(List<Location> locations) {
+    private synchronized void updateLocation(List<Location> locations) {
         Location location = locations.get(0);
         LatLng position = new LatLng(location.getX(), location.getY());
         mMap.clear();
@@ -55,31 +57,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(position));
     }
 
-    class LocationBackgroundTask extends AsyncTask<Void, Void, Void> {
-
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        private void getLocation() {
-            ServerApiKt.childLocation(child.getId(), r -> r.match(
-                    ok -> updateLocation(ok.getLocations()),
-                    error -> {
-                        // TODO: Warn the user
-                    }
-            ));
-        }
-
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        protected Void doInBackground(Void... voids) {
-            while (true) {
-                getLocation();
-                try {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void startLocationListener() {
+        // Calling an async task inside another async task is a deadlock, so we use a thread
+        new Thread(() -> {
+            try {
+                while (true) {
+                    ServerApiKt.childLocation(child.getId(), r -> r.match(
+                            ok -> updateLocation(ok.getLocations()),
+                            error -> Toast.makeText(this, "Error fetching location", Toast.LENGTH_SHORT).show()
+                    ));
                     Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    return null;
                 }
+            } catch (InterruptedException e) {
+                Toast.makeText(this, "Location loop stopped", Toast.LENGTH_SHORT).show();
+                Log.d("ERROR", "Location loop stopped");
             }
-        }
+        }).start();
     }
-
 }
