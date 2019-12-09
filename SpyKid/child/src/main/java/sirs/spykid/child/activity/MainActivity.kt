@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import sirs.spykid.child.R
+import sirs.spykid.util.EncryptionAlgorithm
 import sirs.spykid.util.loginChild
 import java.util.function.Consumer
 
@@ -33,23 +34,25 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startActivityAfterLogin(user: String) {
-        val intent = Intent(applicationContext, QRActivity::class.java)
-        startActivity(intent)
-/*
-        val key = EncryptionAlgorithm(this).generateSecretKey("SharedSecret")
-        val intent2 = Intent(applicationContext, BeaconActivity::class.java).putExtra("key", key)
-        startActivity(intent2)
-*/
+        val crypto = EncryptionAlgorithm(this)
+        val key = crypto.getKey("SharedSecret") ?: {
+            val intent = Intent(applicationContext, QRActivity::class.java)
+            startActivity(intent)
+            crypto.getKey("SharedSecret")
+        }()
+        key?.let {
+            val intent2 =
+                Intent(applicationContext, BeaconActivity::class.java).putExtra("key", it)
+            startActivity(intent2)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun normalSignIn(user: String, password: String) {
         loginChild(user, password, Consumer { response ->
             response.match(
-                Consumer { run { startActivityAfterLogin(user) } },
-                Consumer { err ->
-                    run { Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show() }
-                })
+                Consumer { startActivityAfterLogin(user) },
+                Consumer { err -> Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show() })
         })
     }
 }
