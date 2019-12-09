@@ -3,8 +3,8 @@ package sirs.spykid.child.activity
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
-import android.net.Uri
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -17,11 +17,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.vision.Frame
 import com.google.android.gms.vision.barcode.Barcode
 import com.google.android.gms.vision.barcode.BarcodeDetector
-import javax.crypto.spec.SecretKeySpec
-
 import sirs.spykid.child.R
 import sirs.spykid.util.EncryptionAlgorithm
+import sirs.spykid.util.SharedKey
 
+@RequiresApi(Build.VERSION_CODES.O)
 class QRActivity : AppCompatActivity() {
 
     private var qrScanner: ImageView? = null
@@ -51,7 +51,6 @@ class QRActivity : AppCompatActivity() {
         startActivityForResult(cameraIntent, IMAGE_CAPTURE_CODE)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @ExperimentalStdlibApi
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -68,14 +67,14 @@ class QRActivity : AppCompatActivity() {
             if (detector!!.isOperational && bitmap != null) {
                 val frame = Frame.Builder().setBitmap(bitmap).build()
                 val barcode = detector!!.detect(frame)
-                var encodedKey = byteArrayOf()
+                val encodedKey = StringBuilder()
                 for (index in 0 until barcode.size()) {
                     val code = barcode.valueAt(index).displayValue
-                    encodedKey.plus(code.encodeToByteArray())
+                    encodedKey.append(code)
                 }
-                val key = SecretKeySpec(encodedKey, 0, encodedKey.size, "AES")
-                val encryptionAlgorithm = EncryptionAlgorithm()
-                encryptionAlgorithm.loadSecretKey("SharedSecret", key)
+                val key = SharedKey.decode(encodedKey.toString())
+                val encryptionAlgorithm = EncryptionAlgorithm(this)
+                encryptionAlgorithm.storeSecretKey("SharedSecret", key)
             }
         }
     }

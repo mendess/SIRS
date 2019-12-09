@@ -1,18 +1,25 @@
 package sirs.spykid.util
 
 import android.os.Build
+import android.os.Parcel
+import android.os.Parcelable
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.security.keystore.KeyProtection
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.net.Socket
 import java.security.Key
 import java.security.KeyStore
+import java.security.SecureRandom
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -20,85 +27,82 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+private fun makeRandomBytes(): ByteArray {
+    val key = ByteArray(32)
+    SecureRandom().nextBytes(key)
+    return key
+}
 
-class EncryptionAlgorithm {
+@RequiresApi(Build.VERSION_CODES.O)
+private fun encrypt(key: ByteArray, message: ByteArray): Packet {
+    val keySpec = SecretKeySpec(key, 0, key.size, "AES")
+    val cipher = Cipher.getInstance("AES/OFB/NoPadding")
+    cipher.init(Cipher.ENCRYPT_MODE, keySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
+    return Packet(cipher.iv, cipher.doFinal(message))
+}
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    @Throws(Exception::class)
-    fun generateSecretKey(keystoreAlias: String): Key {
-        val androidKeyStore = KeyStore.getDefaultType() //"AndroidKeyStore"
-        val keyStore = KeyStore.getInstance(androidKeyStore)
-        keyStore.load(null)
+private fun decrypt(key: ByteArray, packet: Packet): ByteArray {
+    val keySpec = SecretKeySpec(key, 0, key.size, "AES")
+    val cipher = Cipher.getInstance("AES/OFB/NoPadding")
+    cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(packet.iv))
+    return cipher.doFinal(packet.payload)
+}
 
-        if (!keyStore.containsAlias(keystoreAlias)) {
-            val keyGenerator: KeyGenerator =
-                KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
-            keyGenerator.init(
-                KeyGenParameterSpec.Builder(
-                    keystoreAlias,
-                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-                )
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .setRandomizedEncryptionRequired(false)
-                    .build()
-            )
-            keyGenerator.generateKey()
+@RequiresApi(Build.VERSION_CODES.O)
+class EncryptionAlgorithm private constructor(private val filesDir: File) {
+    constructor(context: AppCompatActivity) : this(context.filesDir)
+
+    fun generateSecretKey(keystoreAlias: String): SharedKey {
+        val keyFile = File(filesDir, keystoreAlias)
+        return when {
+            !keyFile.exists() -> {
+                val key = SharedKey(makeRandomBytes())
+                storeSecretKey(keyFile, key)
+                key
+            }
+            else -> getKey(keyFile)
         }
-        return keyStore.getKey(keystoreAlias, null)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    @Throws(Exception::class)
-    fun generateSessionKey(keystoreAlias: String): SecretKey {
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
-        val keyParam = KeyGenParameterSpec.Builder(
-            keystoreAlias,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setRandomizedEncryptionRequired(false)
-            .build()
-        keyGenerator.init(keyParam)
-        return keyGenerator.generateKey()
+    fun storeSecretKey(keystoreAlias: String, key: SharedKey) {
+        val keyFile = File(filesDir, keystoreAlias)
+        storeSecretKey(keyFile, key)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    @Throws(Exception::class)
-    fun loadSecretKey(keystoreAlias: String, guardianKey: Key): KeyStore {
-        val androidKeyStore = KeyStore.getDefaultType() //"AndroidKeyStore"
-        val keyStore = KeyStore.getInstance(androidKeyStore)
-        keyStore.load(null)
+    private fun storeSecretKey(keyFile: File, key: SharedKey) {
+        val keyEncoded = key.encoded
+        OutputStreamWriter(keyFile.outputStream()).write(keyEncoded, 0, keyEncoded.length)
+    }
 
-        if (!keyStore.containsAlias(keystoreAlias)) {
-            val secretEntry = KeyStore.SecretKeyEntry(guardianKey as SecretKey)
-            keyStore.setEntry(keystoreAlias, secretEntry, null)
+    private fun getKey(keyFile: File): SharedKey {
+        return SharedKey.decode(InputStreamReader(keyFile.inputStream()).readText())
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+class SharedKey internal constructor(val key: ByteArray) : Parcelable {
+    val encoded: String = Base64.getEncoder().encodeToString(key)
+
+    constructor(parcel: Parcel) : this(parcel.createByteArray()!!)
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeByteArray(key)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<SharedKey> {
+        override fun createFromParcel(parcel: Parcel): SharedKey {
+            return SharedKey(parcel)
         }
-        return keyStore
-    }
 
-    @Throws(Exception::class)
-    fun getKey(keystoreAlias: String): Key {
-        val androidKeyStore = KeyStore.getDefaultType() //"AndroidKeyStore"
-        val keyStore = KeyStore.getInstance(androidKeyStore)
-        keyStore.load(null)
-        return keyStore.getKey(keystoreAlias, null)
-    }
+        override fun newArray(size: Int): Array<SharedKey?> {
+            return arrayOfNulls(size)
+        }
 
-    fun encrypt(key: ByteArray, message: ByteArray): ByteArray {
-        val keySpec = SecretKeySpec(key, 0, key.size, "AES")
-        val cipher = Cipher.getInstance("AES/OFB/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
-        return cipher.doFinal(message)
-    }
-
-    fun decrypt(key: ByteArray, secret: ByteArray): ByteArray {
-        val keySpec = SecretKeySpec(key, 0, key.size, "AES")
-        val message: ByteArray
-        val cipher = Cipher.getInstance("AES/OFB/NoPadding")
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
-        message = cipher.doFinal(secret)
-        return message
+        fun decode(key: String): SharedKey = SharedKey(Base64.getDecoder().decode(key))
     }
 }
 
@@ -113,7 +117,7 @@ class Session(host: String, port: Int) {
         fun <T : Requests.ToJson> request(message: T): String {
             synchronized(monitor) {
                 if (!::session.isInitialized) {
-                    session = Session("192.168.1.95", 6894)
+                    session = Session("172.20.10.4", 6894)
                 }
                 return session.request(message.toJson())
             }
@@ -138,51 +142,37 @@ class Session(host: String, port: Int) {
      * Sends a request encrypted with the shared secret and the session key
      */
     internal fun request(message: String): String {
-        // Encrypt with session key TODO: check if methods from EncryptionAlgorithm class can be used
-        val keySpec = SecretKeySpec(this.sessionKey, 0, this.sessionKey.size, "AES")
-        val cipher = Cipher.getInstance("AES/OFB/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec)
-        val cipherText =
-            String(Base64.getEncoder().encode(cipher.doFinal(message.toByteArray() + this.challenge)))
-
-        // Construct and send packet
-        val packet = JsonObject()
-        packet.add("payload", JsonPrimitive(cipherText))
-        packet.add("iv", JsonPrimitive(Base64.getEncoder().encodeToString(cipher.iv)))
+        val packet = encrypt(this.sessionKey, message.toByteArray() + this.challenge)
         this.connection.getOutputStream().write(packet.toString().toByteArray())
         val response = Packet.from(this.connectionReader.readLine())
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(response.iv))
-        return String(cipher.doFinal(response.payload))
+        return String(decrypt(this.sessionKey, response))
     }
 
     private fun generateSessionKey(socket: Socket): Pair<ByteArray, ByteArray> {
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES)
-        val keyParam1 = KeyGenParameterSpec.Builder(
-            "sessionKey",
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-        val keyParam2 = keyParam1.setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-        val keyParam3 = keyParam2.setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-        val keyParam4 = keyParam3.setRandomizedEncryptionRequired(false)
-        val keyParam = keyParam4.build()
-        keyGenerator.init(keyParam)
-        val key = ByteArray(32)
-        Random().nextBytes(key)
-        socket.getOutputStream().write(key)
+        val sessionKey = makeRandomBytes()
+        socket.getOutputStream().write(sessionKey)
         val challenge = ByteArray(32)
         socket.getInputStream().read(challenge, 0, 32)
-        return Pair(key, challenge)
+        return Pair(sessionKey, challenge)
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private class Packet internal constructor(val iv: ByteArray, val payload: ByteArray) {
+    companion object {
+        internal fun from(data: String): Packet {
+            val jsonObj = JsonParser.parseString(data).asJsonObject
+            return Packet(
+                Base64.getDecoder().decode(jsonObj.get("iv").asString),
+                Base64.getDecoder().decode(jsonObj.get("payload").asString)
+            )
+        }
     }
 
-    private class Packet private constructor(val iv: ByteArray, val payload: ByteArray) {
-        companion object {
-            internal fun from(data: String): Packet {
-                val jsonObj = JsonParser.parseString(data).asJsonObject
-                return Packet(
-                    Base64.getDecoder().decode(jsonObj.get("iv").asString),
-                    Base64.getDecoder().decode(jsonObj.get("payload").asString)
-                )
-            }
-        }
+    override fun toString(): String {
+        val packet = JsonObject()
+        packet.add("payload", JsonPrimitive(Base64.getEncoder().encodeToString(payload)))
+        packet.add("iv", JsonPrimitive(Base64.getEncoder().encodeToString(iv)))
+        return packet.toString()
     }
 }

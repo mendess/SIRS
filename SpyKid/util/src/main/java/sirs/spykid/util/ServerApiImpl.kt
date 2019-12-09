@@ -244,27 +244,31 @@ class Responses {
     }
 
     enum class Error {
-        InvalidChild,
-        InvalidGuardian,
-        NotGuarding,
         AlreadyGuarding,
-        InvalidChildOrGuardian,
         CouldntDecodeB64,
         DecryptionFailed,
+        InvalidChallenge,
+        InvalidChild,
+        InvalidChildOrGuardian,
+        InvalidGuardian,
         InvalidPacketFormat,
-        Other,
+        NotGuarding,
+        NotLoggedIn,
+        Other
     }
 
     companion object {
         internal fun errorFromJson(json: JsonElement): Error = when (json.asString) {
-            "InvalidChild" -> Error.InvalidChild
-            "InvalidGuardian" -> Error.InvalidGuardian
-            "NotGuarding" -> Error.NotGuarding
             "AlreadyGuarding" -> Error.AlreadyGuarding
-            "InvalidChildOrGuardian" -> Error.InvalidChildOrGuardian
             "CouldntDecodeB64" -> Error.CouldntDecodeB64
             "DecryptionFailed" -> Error.DecryptionFailed
+            "InvalidChallenge" -> Error.InvalidChallenge
+            "InvalidChild" -> Error.InvalidChild
+            "InvalidChildOrGuardian" -> Error.InvalidChildOrGuardian
+            "InvalidGuardian" -> Error.InvalidGuardian
             "InvalidPacketFormat" -> Error.InvalidPacketFormat
+            "NotGuarding" -> Error.NotGuarding
+            "NotLoggedIn" -> Error.NotLoggedIn
             else -> Error.Other
         }
     }
