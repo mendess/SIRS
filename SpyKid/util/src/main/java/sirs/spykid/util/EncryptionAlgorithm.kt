@@ -3,9 +3,6 @@ package sirs.spykid.util
 import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
-import android.security.keystore.KeyProtection
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -17,22 +14,32 @@ import java.io.File
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
-import java.security.Key
-import java.security.KeyStore
+import java.security.KeyFactory
 import java.security.SecureRandom
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+const val PUBLIC_KEY =
+        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwmi6s7bKqRiABSbjqd3s" +
+        "hoK515C/n4piIOCWEhdpSFNrLrDlcSykFfSyG9X2NxV4Vi1Kps6MoXojh+79V5wM" +
+        "Cs9xOEEgSE4g0vz4cu3ZsBbSN4ZYcSgzx4NGtzkVB0d1w7jE4t2ossTgcYgqfSJr" +
+        "A3RnNyfDed1fEqSOyjuTsV/8KnN0/yzwIxqrPinWrkFAKbJDNyqlf02QtACphQ9t" +
+        "GaEo4vxcJAtFNcBPfjgLboV4ZyXzf4iYTys/7jhMc28Ti3o627DuvBt/wB2u0fEp" +
+        "Fgxl/OCXJhwzZebZGPfC+sz6dOlFvunSiU2vWaDXxF/NSUs+7CmUQh0pI/d4gdLe" +
+        "UwIDAQAB"
+
+@RequiresApi(Build.VERSION_CODES.O)
 private fun encryptWithPK(key: ByteArray): ByteArray {
-    /* TODO
-    Figure out how to load a vendored public key (the server's)
-    Figure out how to encrypt a asymmetric key
-     */
-    return key
+    val decoded = Base64.getDecoder().decode(PUBLIC_KEY)
+    val keySpec = X509EncodedKeySpec(decoded)
+    val keyFactory = KeyFactory.getInstance("RSA")
+    val pubKey = keyFactory.generatePublic(keySpec)
+    val cipher = Cipher.getInstance("RSA/ECB/NoPadding")
+    cipher.init(Cipher.ENCRYPT_MODE, pubKey)
+    return cipher.doFinal(key).also { Log.d("INFO", "Size: ${it.size}") }
 }
 
 private fun makeRandomBytes(): ByteArray {
@@ -44,14 +51,14 @@ private fun makeRandomBytes(): ByteArray {
 @RequiresApi(Build.VERSION_CODES.O)
 private fun encrypt(key: ByteArray, message: ByteArray): Packet {
     val keySpec = SecretKeySpec(key, 0, key.size, "AES")
-    val cipher = Cipher.getInstance("AES/OFB/NoPadding")
-    cipher.init(Cipher.ENCRYPT_MODE, keySpec, IvParameterSpec(ByteArray(cipher.blockSize)))
+    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+    cipher.init(Cipher.ENCRYPT_MODE, keySpec)
     return Packet(cipher.iv, cipher.doFinal(message))
 }
 
 private fun decrypt(key: ByteArray, packet: Packet): ByteArray {
     val keySpec = SecretKeySpec(key, 0, key.size, "AES")
-    val cipher = Cipher.getInstance("AES/OFB/NoPadding")
+    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(packet.iv))
     return cipher.doFinal(packet.payload)
 }
@@ -132,7 +139,7 @@ class Session(host: String, port: Int) {
             Log.d("INFO", "Requesting: $message")
             synchronized(monitor) {
                 if (!::session.isInitialized) {
-                    session = Session("89.154.164.162", 6894)
+                    session = Session("192.168.1.95", 6894)
                 }
                 return session.request(message.toJson())
             }
@@ -168,8 +175,8 @@ class Session(host: String, port: Int) {
     }
 
     private fun generateSessionKey(socket: Socket): Pair<ByteArray, ByteArray> {
-        val sessionKey = encryptWithPK(makeRandomBytes())
-        socket.getOutputStream().write(sessionKey)
+        val sessionKey = makeRandomBytes()
+        socket.getOutputStream().write(encryptWithPK(sessionKey))
         val challenge = ByteArray(32)
         socket.getInputStream().read(challenge, 0, 32)
         return Pair(sessionKey, challenge)

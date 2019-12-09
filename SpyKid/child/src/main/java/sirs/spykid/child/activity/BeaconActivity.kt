@@ -3,6 +3,7 @@ package sirs.spykid.child.activity
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +16,6 @@ import java.util.function.Consumer
 
 @RequiresApi(Build.VERSION_CODES.O)
 class BeaconActivity : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu)
@@ -30,9 +30,13 @@ class BeaconActivity : AppCompatActivity() {
                     updateChildLocation(getRandomLocation(), Consumer { r ->
                         r.match(
                             Consumer { },
-                            Consumer { error ->
-                                Toast.makeText(this, "Error sending location", Toast.LENGTH_SHORT)
-                                    .show()
+                            Consumer {
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this, "Error sending location",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         )
                     })
@@ -47,6 +51,6 @@ class BeaconActivity : AppCompatActivity() {
 
     private fun getRandomLocation(): Location {
         val random = Random()
-        return Location(random.nextDouble(), random.nextDouble(), LocalDateTime.now())
+        return Location(random.nextDouble() * 100, random.nextDouble() * 100, LocalDateTime.now())
     }
 }

@@ -1,5 +1,10 @@
 use crate::error;
-use openssl::symm::{self, Cipher};
+use once_cell::sync::OnceCell;
+use openssl::{
+    pkey::Private,
+    rsa::{Padding, Rsa},
+    symm::{self, Cipher},
+};
 use rand::{rngs::StdRng, RngCore, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -7,8 +12,16 @@ use std::{
     io::{self, Read, Write},
 };
 
-pub fn decrypt_with_private_k(cryptogram: [u8; 32]) -> [u8; 32] {
-    cryptogram
+pub fn decrypt_with_private_k(data: [u8; 256]) -> [u8; 32] {
+    static PRIVATE_KEY: OnceCell<Rsa<Private>> = OnceCell::new();
+    let pkey = PRIVATE_KEY.get_or_init(|| {
+        static PRIVATE_KEY_BYTES: &[u8] = include_bytes!("../resources/private_key.pem");
+        Rsa::private_key_from_pem(PRIVATE_KEY_BYTES).unwrap()
+    });
+    let mut cryptogram = [0_u8; 256];
+    pkey.private_decrypt(&data, &mut cryptogram, Padding::NONE)
+        .expect("Why did you fail me, my son");
+    std::convert::TryFrom::try_from(&cryptogram[(256 - 32)..]).unwrap()
 }
 
 fn generate_challenge(rng: &mut StdRng) -> [u8; 32] {
@@ -35,7 +48,7 @@ impl CryptoConfig {
     where
         S: Read + Write,
     {
-        let mut session_key = [0_u8; 32];
+        let mut session_key = [0_u8; 256];
         stream.read_exact(&mut session_key)?;
         let session_key = decrypt_with_private_k(session_key);
         eprintln!("Session key: {:?}", session_key);
@@ -44,7 +57,7 @@ impl CryptoConfig {
         eprintln!("Challenge: {:?}", challenge);
         stream.write_all(&challenge)?;
         Ok(Self {
-            cipher: Cipher::aes_256_ofb(),
+            cipher: Cipher::aes_256_cbc(),
             session_key,
             challenge,
             rng: RefCell::new(rng),

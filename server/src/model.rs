@@ -131,7 +131,7 @@ impl Db {
             .first::<i32>(&*self.0.lock().unwrap())
             .map(ChildId::from)
             .map_err(|e| {
-                eprintln!("Error in Db::login_guardian: {:?}", e);
+                eprintln!("Error in Db::login_child: {:?}", e);
                 use diesel::result::Error as DBError;
                 match e {
                     DBError::NotFound => Error::InvalidUsernameOrPassword,

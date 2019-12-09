@@ -26,8 +26,8 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.signIn).setOnClickListener {
             normalSignIn(
-                this.findViewById<EditText>(R.id.username).text.toString(),
-                this.findViewById<EditText>(R.id.password).text.toString()
+                this.findViewById<EditText>(R.id.username).text.toString().trim(),
+                this.findViewById<EditText>(R.id.password).text.toString().trim()
             )
         }
     }
@@ -52,7 +52,11 @@ class MainActivity : AppCompatActivity() {
         loginChild(user, password, Consumer { response ->
             response.match(
                 Consumer { startActivityAfterLogin(user) },
-                Consumer { err -> Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show() })
+                Consumer { err ->
+                    runOnUiThread {
+                        Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show()
+                    }
+                })
         })
     }
 }

@@ -42,12 +42,12 @@ public class MainActivity extends AppCompatActivity {
         error = findViewById(R.id.main_error);
         findViewById(R.id.firebase_signin).setOnClickListener(v -> showSignInOptions());
         findViewById(R.id.signin).setOnClickListener(v -> normalSignIn(
-                this.<EditText>findViewById(R.id.username).getText().toString(),
-                this.<EditText>findViewById(R.id.password).getText().toString()
+                this.<EditText>findViewById(R.id.username).getText().toString().trim(),
+                this.<EditText>findViewById(R.id.password).getText().toString().trim()
         ));
         findViewById(R.id.signup).setOnClickListener(v -> normalSignUp(
-                this.<EditText>findViewById(R.id.username).getText().toString(),
-                this.<EditText>findViewById(R.id.password).getText().toString()
+                this.<EditText>findViewById(R.id.username).getText().toString().trim(),
+                this.<EditText>findViewById(R.id.password).getText().toString().trim()
         ));
     }
 
