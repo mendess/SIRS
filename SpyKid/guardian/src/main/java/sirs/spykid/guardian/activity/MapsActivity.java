@@ -11,11 +11,12 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import sirs.spykid.guardian.R;
@@ -23,49 +24,42 @@ import sirs.spykid.util.Child;
 import sirs.spykid.util.Location;
 import sirs.spykid.util.ServerApiKt;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
-    private GoogleMap mMap;
-    private Child child;
-
+@RequiresApi(api = Build.VERSION_CODES.O)
+public class MapsActivity extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         Intent intent = getIntent();
-        child = intent.getParcelableExtra("child");
+        Child child = intent.getParcelableExtra("child");
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(map -> startLocationListener(map, child));
+        }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        //Call AsyncTask
-        startLocationListener();
+    private void updateLocation(final GoogleMap map, final Child child, final List<Location> locations) {
+        if (!locations.isEmpty()) {
+            Location location = locations.get(0);
+            if (location.getTimestamp().isBefore(LocalDateTime.now().minus(Duration.ofMinutes(10)))) {
+                //TODO: make this a notification
+                Toast.makeText(this, "Warning child hasn't said anything in a while", Toast.LENGTH_LONG).show();
+            }
+            LatLng position = new LatLng(location.getX(), location.getY());
+            map.clear();
+            map.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
+            map.moveCamera(CameraUpdateFactory.newLatLng(position));
+        }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private synchronized void updateLocation(List<Location> locations) {
-        Location location = locations.get(0);
-        LatLng position = new LatLng(location.getX(), location.getY());
-        mMap.clear();
-        mMap.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(position));
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void startLocationListener() {
-        // Calling an async task inside another async task is a deadlock, so we use a thread
+    private void startLocationListener(final GoogleMap map, final Child child) {
         new Thread(() -> {
             try {
                 while (true) {
                     ServerApiKt.childLocation(child.getId(), r -> r.match(
-                            ok -> updateLocation(ok.getLocations()),
-                            error -> Toast.makeText(this, "Error fetching location", Toast.LENGTH_SHORT).show()
+                            ok -> updateLocation(map, child, ok.getLocations()),
+                            error -> Log.d("INFO", "Error fetching location")//Toast.makeText(this, "Error fetching location", Toast.LENGTH_SHORT).show()
                     ));
                     Thread.sleep(3000);
                 }

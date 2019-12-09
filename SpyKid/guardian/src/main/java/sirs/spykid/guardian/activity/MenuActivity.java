@@ -1,5 +1,6 @@
 package sirs.spykid.guardian.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -7,8 +8,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,6 +20,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import sirs.spykid.guardian.R;
 import sirs.spykid.util.Child;
@@ -28,8 +32,9 @@ public class MenuActivity extends AppCompatActivity {
     private FloatingActionButton addBeaconButton;
     private ImageView image;
     private ListView listView;
+    private TextView error;
 
-    private List<Child> children = new ArrayList<>();
+    private List<PrettyChild> children = new ArrayList<>();
 //    private FirebaseUser user;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -37,6 +42,7 @@ public class MenuActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
+        error = findViewById(R.id.menu_error);
         signOutButton = findViewById(R.id.btn_sign_out);
         signOutButton.setOnClickListener(v -> {
             //Logout
@@ -52,6 +58,7 @@ public class MenuActivity extends AppCompatActivity {
         addBeaconButton.setOnClickListener(v -> {
             Intent intent = new Intent(getApplicationContext(), AddBeaconActivity.class);
             startActivity(intent);
+            listChildren();
         });
 
 /*
@@ -65,26 +72,34 @@ public class MenuActivity extends AppCompatActivity {
         ArrayAdapter arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, children);
         listView.setAdapter(arrayAdapter);
         listView.setOnItemClickListener((parent, view, position, id) -> {
+            Child child = children.get(position).child;
             Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-            Child child = (Child) parent.getSelectedItem();
-            startMapActivity(child);
+            intent.putExtra("child", child);
+            startActivity(intent);
         });
 
     }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void listChildren() {
         ServerApiKt.listChildren(r -> r.match(
-                ok -> children.addAll(ok.getChildren()),
-                error -> Toast.makeText(this, "Error listing children", Toast.LENGTH_SHORT).show()
+                ok -> children.addAll(ok.getChildren().stream().map(PrettyChild::new).collect(Collectors.toList())),
+                err -> error.setText("Error listing children: " + err)
         ));
     }
 
-    private void startMapActivity(Child child) {
-        Intent intent = getIntent();
-        intent.putExtra("child", child);
-        startActivity(intent);
-        finish();
-    }
+    private class PrettyChild {
+        private Child child;
 
+        private PrettyChild(Child child) {
+            this.child = child;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return child.getUsername();
+        }
+    }
 }

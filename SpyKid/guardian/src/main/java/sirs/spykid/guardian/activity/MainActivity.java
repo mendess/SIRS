@@ -1,9 +1,11 @@
 package sirs.spykid.guardian.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private List<AuthUI.IdpConfig> providers;
     private static final int MY_REQUEST_CODE = 7117;
+    private TextView error;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         //Initialize providers
         providers = Collections.singletonList(new AuthUI.IdpConfig.GoogleBuilder().build());
 
+        error = findViewById(R.id.main_error);
         findViewById(R.id.firebase_signin).setOnClickListener(v -> showSignInOptions());
         findViewById(R.id.signin).setOnClickListener(v -> normalSignIn(
                 this.<EditText>findViewById(R.id.username).getText().toString(),
@@ -93,28 +97,31 @@ public class MainActivity extends AppCompatActivity {
                         .build(), MY_REQUEST_CODE);
     }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void login(@NonNull FirebaseUser user) {
         //noinspection ConstantConditions
         ServerApiKt.registerGuardian(user.getEmail(), user.getUid(), r -> r.match(
                 ok -> startActivityAfterLogin(user),
-                err -> Toast.makeText(this, "Error connecting to server...", Toast.LENGTH_SHORT).show()
+                err -> error.setText("Error logging in: " + err)
         ));
     }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void normalSignUp(@NonNull String user, String password) {
         Toast.makeText(this, "User" + user + " Password " + password, Toast.LENGTH_SHORT).show();
         ServerApiKt.registerGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
-                err -> Toast.makeText(this, "Error connecting to server...", Toast.LENGTH_SHORT).show()
+                err -> error.setText("Error signing up: " + err)
         ));
     }
 
+    @SuppressLint("SetTextI18n")
     private void normalSignIn(String user, String password) {
         ServerApiKt.loginGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
-                err -> Toast.makeText(this, "Error connecting to server...", Toast.LENGTH_SHORT).show()
+                err -> error.setText("Error signing in: " + err)
         ));
     }
 }

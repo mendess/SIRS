@@ -115,9 +115,10 @@ class Session(host: String, port: Int) {
         private lateinit var session: Session
         private val monitor = Object()
         fun <T : Requests.ToJson> request(message: T): String {
+            Log.d("INFO", "Requesting: $message")
             synchronized(monitor) {
                 if (!::session.isInitialized) {
-                    session = Session("172.20.10.4", 6894)
+                    session = Session("89.154.164.162", 6894)
                 }
                 return session.request(message.toJson())
             }
@@ -142,9 +143,13 @@ class Session(host: String, port: Int) {
      * Sends a request encrypted with the shared secret and the session key
      */
     internal fun request(message: String): String {
+        Log.d("INFO", "Encrypting message")
         val packet = encrypt(this.sessionKey, message.toByteArray() + this.challenge)
+        Log.d("INFO", "Sending message")
         this.connection.getOutputStream().write(packet.toString().toByteArray())
+        Log.d("INFO", "Getting packet from server")
         val response = Packet.from(this.connectionReader.readLine())
+        Log.d("INFO", "Decrypting message")
         return String(decrypt(this.sessionKey, response))
     }
 
