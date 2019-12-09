@@ -25,8 +25,8 @@ import sirs.spykid.util.SharedKey
 class QRActivity : AppCompatActivity() {
 
     private var qrScanner: ImageView? = null
-    private var buttonScan : Button? = null
-    private var imageUri : Uri? = null
+    private var buttonScan: Button? = null
+    private var imageUri: Uri? = null
     private var scanResults: TextView? = null
     private var detector: BarcodeDetector? = null
     private val IMAGE_CAPTURE_CODE = 1001
@@ -36,8 +36,8 @@ class QRActivity : AppCompatActivity() {
         setContentView(R.layout.activity_qr)
         qrScanner = findViewById(R.id.qr_scan)
 
-        buttonScan = findViewById<View>(R.id.scan) as Button
-        buttonScan!!.setOnClickListener{ View.OnClickListener { openCamera() } }
+        buttonScan = findViewById(R.id.scan)
+        buttonScan!!.setOnClickListener { openCamera() }
     }
 
     private fun openCamera() {

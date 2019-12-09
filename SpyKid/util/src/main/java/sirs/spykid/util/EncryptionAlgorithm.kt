@@ -27,6 +27,14 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+private fun encryptWithPK(key: ByteArray): ByteArray {
+    /* TODO
+    Figure out how to load a vendored public key (the server's)
+    Figure out how to encrypt a asymmetric key
+     */
+    return key
+}
+
 private fun makeRandomBytes(): ByteArray {
     val key = ByteArray(32)
     SecureRandom().nextBytes(key)
@@ -76,6 +84,12 @@ class EncryptionAlgorithm private constructor(private val filesDir: File) {
 
     private fun getKey(keyFile: File): SharedKey {
         return SharedKey.decode(InputStreamReader(keyFile.inputStream()).readText())
+    }
+
+    fun getKey(keyName: String): SharedKey? {
+        val keyFile = File(filesDir, keyName)
+        if (!keyFile.exists()) return null
+        return getKey(keyFile)
     }
 }
 
@@ -154,7 +168,7 @@ class Session(host: String, port: Int) {
     }
 
     private fun generateSessionKey(socket: Socket): Pair<ByteArray, ByteArray> {
-        val sessionKey = makeRandomBytes()
+        val sessionKey = encryptWithPK(makeRandomBytes())
         socket.getOutputStream().write(sessionKey)
         val challenge = ByteArray(32)
         socket.getInputStream().read(challenge, 0, 32)
