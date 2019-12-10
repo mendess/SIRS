@@ -39,7 +39,7 @@ class MenuActivity : AppCompatActivity() {
         findViewById<Button>(R.id.go_to_scanner).setOnClickListener {
             val intent = Intent(
                 applicationContext,
-                QRActivity::class.java
+                QRScanner::class.java
             )
             startActivity(intent)
         }

@@ -104,10 +104,10 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
             return cipher.doFinal(packet.payload)
         }
 
-        fun deleteKey(sharedSecretName: String) {
+        fun deleteKey(sharedSecretName: KeyStores) {
             Log.d("INFO", "Deleting key '${sharedSecretName}'")
             if (::ea.isInitialized) {
-                File(ea.filesDir, sharedSecretName).delete()
+                File(ea.filesDir, sharedSecretName.store).delete()
             }
         }
     }
