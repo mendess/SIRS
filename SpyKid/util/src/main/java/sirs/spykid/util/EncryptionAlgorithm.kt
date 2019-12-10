@@ -79,7 +79,6 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
 
     companion object {
         private lateinit var ea: EncryptionAlgorithm
-        const val SHARED_SECRET_NAME = "SharedSecret"
         fun get(context: AppCompatActivity): EncryptionAlgorithm = synchronized(this) {
             if (!::ea.isInitialized) {
                 ea = EncryptionAlgorithm(context)
@@ -106,14 +105,15 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
         }
 
         fun deleteKey(sharedSecretName: String) {
-            if(::ea.isInitialized) {
+            Log.d("INFO", "Deleting key '${sharedSecretName}'")
+            if (::ea.isInitialized) {
                 File(ea.filesDir, sharedSecretName).delete()
             }
         }
     }
 
-    fun generateSecretKey(keystoreAlias: String): SharedKey = synchronized(this) {
-        val keyFile = File(filesDir, keystoreAlias)
+    fun generateSecretKey(keystoreAlias: KeyStores): SharedKey = synchronized(this) {
+        val keyFile = File(filesDir, keystoreAlias.store)
         val key = when {
             !keyFile.exists() -> {
                 val key = SharedKey(makeRandomBytes())
@@ -130,24 +130,38 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
         }
     }
 
-    fun storeSecretKey(keystoreAlias: String, key: SharedKey) = synchronized(this) {
-        val keyFile = File(filesDir, keystoreAlias)
+    fun storeSecretKey(keystoreAlias: KeyStores, key: SharedKey) = synchronized(this) {
+        val keyFile = File(filesDir, keystoreAlias.store)
         storeSecretKey(keyFile, key)
     }
 
     private fun storeSecretKey(keyFile: File, key: SharedKey) = synchronized(this) {
         val keyEncoded = key.encoded
-        OutputStreamWriter(keyFile.outputStream()).write(keyEncoded, 0, keyEncoded.length)
+        Log.d("INFO", "Stored this key: '$keyEncoded'")
+        Log.d("INFO", "Stored key in file '${keyFile.canonicalPath}")
+        val o = OutputStreamWriter(keyFile.outputStream())
+        o.write(keyEncoded, 0, keyEncoded.length)
+        o.flush()
     }
 
     private fun getKey(keyFile: File): SharedKey {
+        Log.d("INFO", "Getting a key from '${keyFile.canonicalPath}' file")
         return SharedKey.decode(InputStreamReader(keyFile.inputStream()).readText())
     }
 
-    fun getKey(keyName: String): SharedKey? {
-        val keyFile = File(filesDir, keyName)
+    fun getKey(keyName: KeyStores): SharedKey? {
+        Log.d("INFO", "Getting a key from '${keyName}' file")
+        val keyFile = File(filesDir, keyName.store)
         if (!keyFile.exists()) return null
-        return getKey(keyFile)
+        return getKey(keyFile).takeIf {
+            it.key.isNotEmpty().also { isNotEmpty -> if (isNotEmpty) Log.d("INFO", "Was empty") }
+        }.also {
+            Log.d("INFO", "Got this key: '${it?.encoded}'")
+        }
+    }
+
+    enum class KeyStores(internal val store: String) {
+        SharedSecret("SharedSecret")
     }
 }
 

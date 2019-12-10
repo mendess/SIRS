@@ -2,6 +2,7 @@ package sirs.spykid.util
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -86,11 +87,13 @@ class ExampleInstrumentedTest {
 
     @Test
     fun locationEncryptionAndDecryption() {
-        EncryptionAlgorithm(File("/tmp"))
+        val context = InstrumentationRegistry.getInstrumentation().context
+        val ea = EncryptionAlgorithm(context.filesDir)
         val (gUsername, gPassword) = Pair(generateString(), generateString())
         val (cUsername, cPassword) = Pair(generateString(), generateString())
         registerGuardian(gUsername, gPassword, Consumer {}).get().unwrap()
         val cid = registerChild(cUsername, cPassword, Consumer {}).get().unwrap().childId
+        ea.generateSecretKey(EncryptionAlgorithm.KeyStores.SharedSecret)
         loginChild(cUsername, cPassword, Consumer {}).get().unwrap()
         val locationBefore =
             Random().let { Location(it.nextDouble(), it.nextDouble(), LocalDateTime.now()) }

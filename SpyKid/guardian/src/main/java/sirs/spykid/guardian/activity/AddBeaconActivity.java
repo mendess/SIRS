@@ -54,7 +54,7 @@ public class AddBeaconActivity extends AppCompatActivity {
     }
 
     private void showQRCode() {
-        SharedKey key = crypto.generateSecretKey("SharedSecret");
+        SharedKey key = crypto.generateSecretKey(EncryptionAlgorithm.KeyStores.SharedSecret);
         Intent intent = new Intent(getApplicationContext(), QRActivity.class);
         intent.putExtra("key", key);
         startActivity(intent);

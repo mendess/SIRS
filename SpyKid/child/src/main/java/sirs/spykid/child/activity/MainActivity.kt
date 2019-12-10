@@ -35,10 +35,10 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startActivityAfterLogin(user: String) {
         val crypto = EncryptionAlgorithm.get(this)
-        val key = crypto.getKey("SharedSecret") ?: {
-            val intent = Intent(applicationContext, QRActivity::class.java)
+        val key = crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret) ?: {
+            val intent = Intent(applicationContext, QRScanner::class.java)
             startActivity(intent)
-            crypto.getKey("SharedSecret")
+            crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)
         }()
         key?.let {
             val intent2 =

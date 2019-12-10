@@ -36,7 +36,7 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
 
         internal fun decrypt(data: String): Location? =
             EncryptionAlgorithm.tryGet()?.let { ea ->
-                ea.getKey(EncryptionAlgorithm.SHARED_SECRET_NAME)?.let {
+                ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
                     String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
                 }
             }?.split('|')?.let {
@@ -46,7 +46,7 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
 
     internal fun encrypt(): Packet? {
         return EncryptionAlgorithm.tryGet()?.let { ea ->
-            ea.getKey(EncryptionAlgorithm.SHARED_SECRET_NAME)?.let {
+            ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
                 EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp".toByteArray())
             }
         }
