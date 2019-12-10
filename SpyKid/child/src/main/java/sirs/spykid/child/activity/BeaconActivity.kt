@@ -20,7 +20,7 @@ import java.util.function.Consumer
 class BeaconActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_menu)
+        setContentView(R.layout.activity_beacon)
         findViewById<Button>(R.id.beacon_delete_key).setOnClickListener {
             EncryptionAlgorithm.deleteKey(EncryptionAlgorithm.SHARED_SECRET_NAME)
             finish()
