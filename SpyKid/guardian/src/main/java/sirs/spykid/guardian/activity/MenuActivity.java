@@ -88,8 +88,8 @@ public class MenuActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void listChildren() {
         ServerApiKt.listChildren(r -> r.match(
-                ok -> children.addAll(ok.getChildren().stream().map(PrettyChild::new).collect(Collectors.toList())),
-                err -> error.setText("Error listing children: " + err)
+                ok -> runOnUiThread(() -> children.addAll(ok.getChildren().stream().map(PrettyChild::new).collect(Collectors.toList()))),
+                err -> runOnUiThread(() -> error.setText("Error listing children: " + err))
         ));
     }
 

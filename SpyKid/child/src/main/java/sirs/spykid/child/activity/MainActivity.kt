@@ -4,6 +4,7 @@ import android.annotation.TargetApi
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -22,8 +23,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //Initialize providers
-
+        //Initialize EncryptionAlgorithm
         findViewById<Button>(R.id.signIn).setOnClickListener {
             normalSignIn(
                 this.findViewById<EditText>(R.id.username).text.toString().trim(),

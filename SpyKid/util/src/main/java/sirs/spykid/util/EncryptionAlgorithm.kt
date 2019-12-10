@@ -239,7 +239,9 @@ class Session(host: String, port: Int) {
         Log.d("INFO", "Getting packet from server")
         val response = Packet.from(this.connectionReader.readLine())
         Log.d("INFO", "Decrypting message")
-        return String(EncryptionAlgorithm.decrypt(this.sessionKey, response))
+        return String(EncryptionAlgorithm.decrypt(this.sessionKey, response)).also {
+            Log.d("INFO", "Decrypted '$it'")
+        }
     }
 
     private fun generateSessionKey(socket: Socket): Pair<ByteArray, ByteArray> {

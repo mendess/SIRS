@@ -3,6 +3,7 @@ package sirs.spykid.util
 import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
+import android.util.Log
 import androidx.annotation.RequiresApi
 import java.time.LocalDateTime
 import java.util.function.Consumer
@@ -34,14 +35,16 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
             return arrayOfNulls(size)
         }
 
-        internal fun decrypt(data: String): Location? =
-            EncryptionAlgorithm.tryGet()?.let { ea ->
+        internal fun decrypt(data: String): Location? {
+            Log.d("INFO", "Decrypting this location: '$data'")
+            return EncryptionAlgorithm.tryGet()?.let { ea ->
                 ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
                     String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
                 }
             }?.split('|')?.let {
                 Location(it[0].toDouble(), it[1].toDouble(), LocalDateTime.parse(it[2]))
             }
+        }
     }
 
     internal fun encrypt(): Packet? {
@@ -49,6 +52,8 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
             ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
                 EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp".toByteArray())
             }
+        }.also {
+            Log.d("INFO", "Encrypted ${this} into '$it'")
         }
     }
 }

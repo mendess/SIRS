@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,10 +23,11 @@ import java.util.Collections;
 import java.util.List;
 
 import sirs.spykid.guardian.R;
+import sirs.spykid.util.EncryptionAlgorithm;
 import sirs.spykid.util.ServerApiKt;
 
 
-@RequiresApi(api = Build.VERSION_CODES.N)
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class MainActivity extends AppCompatActivity {
 
     private List<AuthUI.IdpConfig> providers;
@@ -38,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         //Initialize providers
         providers = Collections.singletonList(new AuthUI.IdpConfig.GoogleBuilder().build());
+        Log.d("INFO", "Initializing encryption algorithm");
+        EncryptionAlgorithm.Companion.get(this);
 
         error = findViewById(R.id.main_error);
         findViewById(R.id.firebase_signin).setOnClickListener(v -> showSignInOptions());
