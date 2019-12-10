@@ -67,6 +67,10 @@ public class MenuActivity extends AppCompatActivity {
             Toast.makeText(this, "Invalid user and/or guardian token", Toast.LENGTH_SHORT).show();
 */
 
+        findViewById(R.id.refresh_button).setOnClickListener(v -> {
+            listChildren();
+        });
+
         listChildren();
         listView = findViewById(R.id.beacon_list);
         ArrayAdapter arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, children);

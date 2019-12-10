@@ -12,4 +12,5 @@
     <string name="user">username</string>
     <string name="channel_name">alerts</string>
     <string name="channel_descritpion">alerts about child location</string>
+    <string name="refresh_button_text">refresh</string>
 </resources>
