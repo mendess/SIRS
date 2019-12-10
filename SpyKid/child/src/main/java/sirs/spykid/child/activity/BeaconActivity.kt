@@ -3,11 +3,13 @@ package sirs.spykid.child.activity
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import sirs.spykid.child.R
+import sirs.spykid.util.EncryptionAlgorithm
 import sirs.spykid.util.Location
 import sirs.spykid.util.updateChildLocation
 import java.time.LocalDateTime
@@ -19,6 +21,10 @@ class BeaconActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu)
+        findViewById<Button>(R.id.beacon_delete_key).setOnClickListener {
+            EncryptionAlgorithm.deleteKey(EncryptionAlgorithm.SHARED_SECRET_NAME)
+            finish()
+        }
         startLocationBroadcaster()
     }
 

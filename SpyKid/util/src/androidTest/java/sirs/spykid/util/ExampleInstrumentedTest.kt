@@ -1,8 +1,10 @@
 package sirs.spykid.util
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 import java.time.LocalDateTime
 import java.util.*
 import java.util.function.Consumer
@@ -78,7 +80,23 @@ class ExampleInstrumentedTest {
         registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
         val username = generateString()
         val password = generateString()
-        registerChild(username, password, Consumer {}).get()
-        loginChild(username, password, Consumer {}).get()
+        registerChild(username, password, Consumer {}).get().unwrap()
+        loginChild(username, password, Consumer {}).get().unwrap()
+    }
+
+    @Test
+    fun locationEncryptionAndDecryption() {
+        EncryptionAlgorithm(File("/tmp"))
+        val (gUsername, gPassword) = Pair(generateString(), generateString())
+        val (cUsername, cPassword) = Pair(generateString(), generateString())
+        registerGuardian(gUsername, gPassword, Consumer {}).get().unwrap()
+        val cid = registerChild(cUsername, cPassword, Consumer {}).get().unwrap().childId
+        loginChild(cUsername, cPassword, Consumer {}).get().unwrap()
+        val locationBefore =
+            Random().let { Location(it.nextDouble(), it.nextDouble(), LocalDateTime.now()) }
+        updateChildLocation(locationBefore, Consumer {}).get().unwrap()
+        loginGuardian(gUsername, gPassword, Consumer {}).get().unwrap()
+        val locationAfter = childLocation(cid, Consumer {}).get().unwrap().locations[0]
+        assert(locationBefore == locationAfter) { "Before: $locationBefore | After $locationAfter" }
     }
 }

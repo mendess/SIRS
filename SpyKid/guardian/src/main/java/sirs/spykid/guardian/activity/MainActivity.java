@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         //noinspection ConstantConditions
         ServerApiKt.registerGuardian(user.getEmail(), user.getUid(), r -> r.match(
                 ok -> startActivityAfterLogin(user),
-                err -> error.setText("Error logging in: " + err)
+                err -> runOnUiThread(() -> error.setText("Error logging in: " + err))
         ));
     }
 
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "User" + user + " Password " + password, Toast.LENGTH_SHORT).show();
         ServerApiKt.registerGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
-                err -> error.setText("Error signing up: " + err)
+                err -> runOnUiThread(() -> error.setText("Error signing up: " + err))
         ));
     }
 
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     private void normalSignIn(String user, String password) {
         ServerApiKt.loginGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
-                err -> error.setText("Error signing in: " + err)
+                err -> runOnUiThread(() -> error.setText("Error signing in: " + err))
         ));
     }
 }

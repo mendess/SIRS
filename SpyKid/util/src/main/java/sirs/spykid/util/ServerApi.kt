@@ -34,17 +34,25 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
             return arrayOfNulls(size)
         }
 
-        internal fun decrypt(data: ByteArray): Location {
-            val s = String(data).split('|')
-            return Location(s[0].toDouble(), s[1].toDouble(), LocalDateTime.parse(s[2]))
+        internal fun decrypt(data: String): Location? =
+            EncryptionAlgorithm.tryGet()?.let { ea ->
+                ea.getKey(EncryptionAlgorithm.SHARED_SECRET_NAME)?.let {
+                    String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
+                }
+            }?.split('|')?.let {
+                Location(it[0].toDouble(), it[1].toDouble(), LocalDateTime.parse(it[2]))
+            }
+    }
+
+    internal fun encrypt(): Packet? {
+        return EncryptionAlgorithm.tryGet()?.let { ea ->
+            ea.getKey(EncryptionAlgorithm.SHARED_SECRET_NAME)?.let {
+                EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp".toByteArray())
+            }
         }
     }
-
-    internal fun encrypt(): ByteArray {
-        return "$x|$y|$timestamp".toByteArray()
-    }
-
 }
+
 data class ChildId(internal val id: Int) : Parcelable {
     constructor(parcel: Parcel) : this(parcel.readInt())
 

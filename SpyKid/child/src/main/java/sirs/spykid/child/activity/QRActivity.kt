@@ -72,9 +72,11 @@ class QRActivity : AppCompatActivity() {
                     val code = barcode.valueAt(index).displayValue
                     encodedKey.append(code)
                 }
-                val key = SharedKey.decode(encodedKey.toString())
-                val encryptionAlgorithm = EncryptionAlgorithm(this)
-                encryptionAlgorithm.storeSecretKey("SharedSecret", key)
+                if(encodedKey.isNotEmpty()) {
+                    val key = SharedKey.decode(encodedKey.toString())
+                    val encryptionAlgorithm = EncryptionAlgorithm.get(this)
+                    encryptionAlgorithm.storeSecretKey("SharedSecret", key)
+                }
             }
         }
     }

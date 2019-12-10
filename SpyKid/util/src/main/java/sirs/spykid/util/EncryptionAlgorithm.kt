@@ -23,13 +23,13 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 const val PUBLIC_KEY =
-        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwmi6s7bKqRiABSbjqd3s" +
-        "hoK515C/n4piIOCWEhdpSFNrLrDlcSykFfSyG9X2NxV4Vi1Kps6MoXojh+79V5wM" +
-        "Cs9xOEEgSE4g0vz4cu3ZsBbSN4ZYcSgzx4NGtzkVB0d1w7jE4t2ossTgcYgqfSJr" +
-        "A3RnNyfDed1fEqSOyjuTsV/8KnN0/yzwIxqrPinWrkFAKbJDNyqlf02QtACphQ9t" +
-        "GaEo4vxcJAtFNcBPfjgLboV4ZyXzf4iYTys/7jhMc28Ti3o627DuvBt/wB2u0fEp" +
-        "Fgxl/OCXJhwzZebZGPfC+sz6dOlFvunSiU2vWaDXxF/NSUs+7CmUQh0pI/d4gdLe" +
-        "UwIDAQAB"
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwmi6s7bKqRiABSbjqd3s" +
+            "hoK515C/n4piIOCWEhdpSFNrLrDlcSykFfSyG9X2NxV4Vi1Kps6MoXojh+79V5wM" +
+            "Cs9xOEEgSE4g0vz4cu3ZsBbSN4ZYcSgzx4NGtzkVB0d1w7jE4t2ossTgcYgqfSJr" +
+            "A3RnNyfDed1fEqSOyjuTsV/8KnN0/yzwIxqrPinWrkFAKbJDNyqlf02QtACphQ9t" +
+            "GaEo4vxcJAtFNcBPfjgLboV4ZyXzf4iYTys/7jhMc28Ti3o627DuvBt/wB2u0fEp" +
+            "Fgxl/OCXJhwzZebZGPfC+sz6dOlFvunSiU2vWaDXxF/NSUs+7CmUQh0pI/d4gdLe" +
+            "UwIDAQAB"
 
 @RequiresApi(Build.VERSION_CODES.O)
 private fun encryptWithPK(key: ByteArray): ByteArray {
@@ -39,7 +39,7 @@ private fun encryptWithPK(key: ByteArray): ByteArray {
     val pubKey = keyFactory.generatePublic(keySpec)
     val cipher = Cipher.getInstance("RSA/ECB/NoPadding")
     cipher.init(Cipher.ENCRYPT_MODE, pubKey)
-    return cipher.doFinal(key).also { Log.d("INFO", "Size: ${it.size}") }
+    return cipher.doFinal(key)
 }
 
 private fun makeRandomBytes(): ByteArray {
@@ -49,27 +49,47 @@ private fun makeRandomBytes(): ByteArray {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun encrypt(key: ByteArray, message: ByteArray): Packet {
-    val keySpec = SecretKeySpec(key, 0, key.size, "AES")
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.ENCRYPT_MODE, keySpec)
-    return Packet(cipher.iv, cipher.doFinal(message))
-}
+class EncryptionAlgorithm internal constructor(private val filesDir: File) {
+    private constructor(context: AppCompatActivity) : this(context.filesDir)
 
-private fun decrypt(key: ByteArray, packet: Packet): ByteArray {
-    val keySpec = SecretKeySpec(key, 0, key.size, "AES")
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(packet.iv))
-    return cipher.doFinal(packet.payload)
-}
+    companion object {
+        private lateinit var ea: EncryptionAlgorithm
+        const val SHARED_SECRET_NAME = "SharedSecret"
+        fun get(context: AppCompatActivity): EncryptionAlgorithm = synchronized(this) {
+            if (!::ea.isInitialized) {
+                ea = EncryptionAlgorithm(context)
+            }
+            return ea
+        }
 
-@RequiresApi(Build.VERSION_CODES.O)
-class EncryptionAlgorithm private constructor(private val filesDir: File) {
-    constructor(context: AppCompatActivity) : this(context.filesDir)
+        fun tryGet(): EncryptionAlgorithm? = synchronized(this) {
+            return@tryGet if (::ea.isInitialized) ea else null
+        }
 
-    fun generateSecretKey(keystoreAlias: String): SharedKey {
+        internal fun encrypt(key: ByteArray, message: ByteArray): Packet {
+            val keySpec = SecretKeySpec(key, 0, key.size, "AES")
+            val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec)
+            return Packet(cipher.iv, cipher.doFinal(message))
+        }
+
+        internal fun decrypt(key: ByteArray, packet: Packet): ByteArray {
+            val keySpec = SecretKeySpec(key, 0, key.size, "AES")
+            val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(packet.iv))
+            return cipher.doFinal(packet.payload)
+        }
+
+        fun deleteKey(sharedSecretName: String) {
+            if(::ea.isInitialized) {
+                File(ea.filesDir, sharedSecretName).delete()
+            }
+        }
+    }
+
+    fun generateSecretKey(keystoreAlias: String): SharedKey = synchronized(this) {
         val keyFile = File(filesDir, keystoreAlias)
-        return when {
+        val key = when {
             !keyFile.exists() -> {
                 val key = SharedKey(makeRandomBytes())
                 storeSecretKey(keyFile, key)
@@ -77,14 +97,20 @@ class EncryptionAlgorithm private constructor(private val filesDir: File) {
             }
             else -> getKey(keyFile)
         }
+        return if (key.key.isEmpty()) {
+            keyFile.delete()
+            generateSecretKey(keystoreAlias)
+        } else {
+            key
+        }
     }
 
-    fun storeSecretKey(keystoreAlias: String, key: SharedKey) {
+    fun storeSecretKey(keystoreAlias: String, key: SharedKey) = synchronized(this) {
         val keyFile = File(filesDir, keystoreAlias)
         storeSecretKey(keyFile, key)
     }
 
-    private fun storeSecretKey(keyFile: File, key: SharedKey) {
+    private fun storeSecretKey(keyFile: File, key: SharedKey) = synchronized(this) {
         val keyEncoded = key.encoded
         OutputStreamWriter(keyFile.outputStream()).write(keyEncoded, 0, keyEncoded.length)
     }
@@ -135,13 +161,15 @@ class Session(host: String, port: Int) {
     companion object {
         private lateinit var session: Session
         private val monitor = Object()
-        fun <T : Requests.ToJson> request(message: T): String {
+        fun <T : Requests.ToJson> request(message: T): String? {
             Log.d("INFO", "Requesting: $message")
             synchronized(monitor) {
                 if (!::session.isInitialized) {
-                    session = Session("192.168.1.95", 6894)
+                    session = Session("89.154.164.162", 6894)
                 }
-                return session.request(message.toJson())
+                return message.toJson()?.let {
+                    session.request(it)
+                }
             }
         }
     }
@@ -165,13 +193,14 @@ class Session(host: String, port: Int) {
      */
     internal fun request(message: String): String {
         Log.d("INFO", "Encrypting message")
-        val packet = encrypt(this.sessionKey, message.toByteArray() + this.challenge)
+        val packet =
+            EncryptionAlgorithm.encrypt(this.sessionKey, message.toByteArray() + this.challenge)
         Log.d("INFO", "Sending message")
         this.connection.getOutputStream().write(packet.toString().toByteArray())
         Log.d("INFO", "Getting packet from server")
         val response = Packet.from(this.connectionReader.readLine())
         Log.d("INFO", "Decrypting message")
-        return String(decrypt(this.sessionKey, response))
+        return String(EncryptionAlgorithm.decrypt(this.sessionKey, response))
     }
 
     private fun generateSessionKey(socket: Socket): Pair<ByteArray, ByteArray> {
@@ -184,7 +213,7 @@ class Session(host: String, port: Int) {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private class Packet internal constructor(val iv: ByteArray, val payload: ByteArray) {
+internal class Packet internal constructor(val iv: ByteArray, val payload: ByteArray) {
     companion object {
         internal fun from(data: String): Packet {
             val jsonObj = JsonParser.parseString(data).asJsonObject
