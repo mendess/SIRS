@@ -14,13 +14,14 @@ import java.io.File
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
-import java.security.KeyFactory
-import java.security.SecureRandom
+import java.security.*
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import kotlin.experimental.and
+
 
 const val PUBLIC_KEY =
     "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwmi6s7bKqRiABSbjqd3s" +
@@ -46,6 +47,30 @@ private fun makeRandomBytes(): ByteArray {
     val key = ByteArray(32)
     SecureRandom().nextBytes(key)
     return key
+}
+
+@ExperimentalStdlibApi
+fun getSecurePassword(username: String, password: String): String {
+    var generatedPassword: String? = null
+    val salt: ByteArray = username.encodeToByteArray()
+    try { // Create MessageDigest instance for MD5
+        val md: MessageDigest = MessageDigest.getInstance("MD5")
+        //Add password bytes to digest
+        md.update(salt)
+        //Get the hash's bytes
+        val bytes: ByteArray = md.digest(password.encodeToByteArray())
+        //This bytes[] has bytes in decimal format;
+//Convert it to hexadecimal format
+        val sb = StringBuilder()
+        for (i in bytes.indices) {
+            sb.append(((bytes[i] and 0xff.toByte()) + 0x100).toString(16).substring(1))
+        }
+        //Get complete hashed password in hex format
+        generatedPassword = sb.toString()
+    } catch (e: NoSuchAlgorithmException) {
+        e.printStackTrace()
+    }
+    return generatedPassword ?: return password
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

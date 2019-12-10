@@ -13,15 +13,19 @@ import com.google.gson.JsonPrimitive
 internal class RegisterGuardian(private val callback: (Result<Responses.RegisterGuardian, Responses.Error>) -> Unit) :
     AsyncTask<Pair<String, String>, Unit, Result<Responses.RegisterGuardian, Responses.Error>>() {
     companion object {
+        @ExperimentalStdlibApi
         internal fun run(
             username: String,
             password: String
-        ): Result<Responses.RegisterGuardian, Responses.Error> =
-            resultFromJson(Session.request(Requests.RegisterGuardian(username, password))!!)
+        ): Result<Responses.RegisterGuardian, Responses.Error> {
+            val hashedPassword = getSecurePassword(username, password)
+            return resultFromJson(Session.request(Requests.RegisterGuardian(username, hashedPassword))!!)
                 .map { Responses.RegisterGuardian.fromJson(it) }
                 .mapErr { Responses.errorFromJson(it) }
+        }
     }
 
+    @ExperimentalStdlibApi
     override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.RegisterGuardian, Responses.Error> {
         assert(params.isNotEmpty())
         Log.d(Log.INFO.toString(), "Doing in background" + this.javaClass.canonicalName)
@@ -35,16 +39,19 @@ internal class RegisterGuardian(private val callback: (Result<Responses.Register
 internal class LoginGuardian(private val callback: (Result<Responses.LoginGuardian, Responses.Error>) -> Unit) :
     AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginGuardian, Responses.Error>>() {
     companion object {
+        @ExperimentalStdlibApi
         internal fun run(
             username: String,
             password: String
         ): Result<Responses.LoginGuardian, Responses.Error> {
-            return resultFromJson(Session.request(Requests.LoginGuardian(username, password))!!)
+            val hashedPassword = getSecurePassword(username, password)
+            return resultFromJson(Session.request(Requests.LoginGuardian(username, hashedPassword))!!)
                 .map { Responses.LoginGuardian.fromJson(it) }
                 .mapErr { Responses.errorFromJson(it) }
         }
     }
 
+    @ExperimentalStdlibApi
     override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.LoginGuardian, Responses.Error> {
         assert(params.isNotEmpty())
         val r = run(params[0].first, params[0].second)
@@ -98,22 +105,19 @@ internal class ChildLocation(private val callback: (Result<Responses.ChildLocati
 internal class RegisterChild(private val callback: (Result<Responses.RegisterChild, Responses.Error>) -> Unit) :
     AsyncTask<Pair<String, String>, Unit, Result<Responses.RegisterChild, Responses.Error>>() {
     companion object {
+        @ExperimentalStdlibApi
         internal fun run(
             username: String,
             password: String
-        ): Result<Responses.RegisterChild, Responses.Error> =
-            resultFromJson(
-                Session.request(
-                    Requests.RegisterChild(
-                        username,
-                        password
-                    )
-                )!!
-            )
+        ): Result<Responses.RegisterChild, Responses.Error> {
+            val hashedPassword = getSecurePassword(username, password)
+            return resultFromJson(Session.request(Requests.RegisterChild(username, hashedPassword))!!)
                 .map { Responses.RegisterChild.fromJson(it) }
                 .mapErr { Responses.errorFromJson(it) }
+        }
     }
 
+    @ExperimentalStdlibApi
     override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.RegisterChild, Responses.Error> {
         assert(params.isNotEmpty())
         val r = run(params[0].first, params[0].second)
@@ -126,16 +130,19 @@ internal class RegisterChild(private val callback: (Result<Responses.RegisterChi
 internal class LoginChild(private val callback: (Result<Responses.LoginChild, Responses.Error>) -> Unit) :
     AsyncTask<Pair<String, String>, Unit, Result<Responses.LoginChild, Responses.Error>>() {
     companion object {
+        @ExperimentalStdlibApi
         internal fun run(
             username: String,
             password: String
         ): Result<Responses.LoginChild, Responses.Error> {
-            return resultFromJson(Session.request(Requests.LoginChild(username, password))!!)
+            val hashedPassword = getSecurePassword(username, password)
+            return resultFromJson(Session.request(Requests.LoginChild(username, hashedPassword))!!)
                 .map { Responses.LoginChild.fromJson(it) }
                 .mapErr { Responses.errorFromJson(it) }
         }
     }
 
+    @ExperimentalStdlibApi
     override fun doInBackground(vararg params: Pair<String, String>): Result<Responses.LoginChild, Responses.Error> {
         assert(params.isNotEmpty())
         val r = run(params[0].first, params[0].second)
