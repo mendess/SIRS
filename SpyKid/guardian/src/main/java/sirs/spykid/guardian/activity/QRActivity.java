@@ -10,8 +10,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
-import java.security.Key;
-
 import sirs.spykid.guardian.R;
 import sirs.spykid.guardian.service.QRGenerator;
 import sirs.spykid.util.SharedKey;

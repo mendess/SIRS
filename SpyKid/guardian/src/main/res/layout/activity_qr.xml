@@ -15,6 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@android:color/black"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        android:contentDescription="QR Code containing key" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

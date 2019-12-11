@@ -5,15 +5,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.Objects;
 
 import sirs.spykid.guardian.R;
 import sirs.spykid.util.EncryptionAlgorithm;

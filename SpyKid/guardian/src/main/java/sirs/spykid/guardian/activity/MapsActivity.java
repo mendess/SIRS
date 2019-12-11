@@ -94,7 +94,8 @@ public class MapsActivity extends FragmentActivity {
                 while (true) {
                     ServerApiKt.childLocation(child.getId(), child.getUsername(), r -> r.match(
                             ok -> updateLocation(map, child, ok.getLocations()),
-                            error -> runOnUiThread(() -> Toast.makeText(this, "Error fetching location: " + error, Toast.LENGTH_SHORT).show())
+                            error -> runOnUiThread(() -> Toast.makeText(this,
+                                    "Error fetching location: " + error, Toast.LENGTH_SHORT).show())
                     ));
                     Thread.sleep(3000);
                 }
@@ -108,7 +109,7 @@ public class MapsActivity extends FragmentActivity {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             String name = getString(R.string.channel_name);
-            String descriptionText = getString(R.string.channel_descritpion);
+            String descriptionText = getString(R.string.channel_description);
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(NOTF_CHANNEL_ID, name, importance);
             channel.setDescription(descriptionText);

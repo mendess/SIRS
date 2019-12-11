@@ -12,6 +12,6 @@
     <string name="pass_hint">enter password</string>
     <string name="user">username</string>
     <string name="channel_name">alerts</string>
-    <string name="channel_descritpion">alerts about child location</string>
+    <string name="channel_description">alerts about child location</string>
     <string name="refresh_button_text">Refresh</string>
 </resources>
