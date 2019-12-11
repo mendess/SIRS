@@ -17,25 +17,6 @@ class MenuActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu)
 
-        findViewById<Button>(R.id.button_done).setOnClickListener {
-            //Logout
-            AuthUI.getInstance()
-                .signOut(this@MenuActivity)
-                .addOnCompleteListener {
-                    val intent = Intent(
-                        this@MenuActivity,
-                        MainActivity::class.java
-                    )
-                    startActivity(intent)
-                }.addOnFailureListener { e: Exception ->
-                    Toast.makeText(
-                        this@MenuActivity,
-                        "" + e.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-        }
-
         findViewById<Button>(R.id.go_to_scanner).setOnClickListener {
             val intent = Intent(
                 applicationContext,
