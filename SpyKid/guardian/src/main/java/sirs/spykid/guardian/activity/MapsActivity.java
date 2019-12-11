@@ -77,8 +77,9 @@ public class MapsActivity extends FragmentActivity {
                 seenLocations.add(l);
             }
             LatLng position = new LatLng(l.getX(), l.getY());
+            String time = l.getTimestamp().getHour() + ":" + l.getTimestamp().getMinute() + ":" + l.getTimestamp().getSecond();
             this.runOnUiThread(() -> {
-                map.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
+                map.addMarker(new MarkerOptions().position(position).title(time));
                 map.moveCamera(CameraUpdateFactory.newLatLng(position));
             });
         }
