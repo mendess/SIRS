@@ -58,6 +58,17 @@ data class Location(
                 )
             }
         }
+
+        internal fun decrypt(data: String, username: String): Location? {
+            Log.d("INFO", "Decrypting this location: '$data'")
+            return EncryptionAlgorithm.tryGet()?.let { ea ->
+                ea.getKey(username)?.let {
+                    String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
+                }
+            }?.split('|')?.let {
+                Location(it[0].toDouble(), it[1].toDouble(), LocalDateTime.parse(it[2]))
+            }
+        }
     }
 
     internal fun encrypt(): Packet? {
@@ -153,9 +164,9 @@ fun listChildren(callback: Consumer<Result<Responses.ListChildren, Responses.Err
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun childLocation(
-    childToken: ChildId,
+    childInfo: Pair<ChildId, String>,
     callback: Consumer<Result<Responses.ChildLocation, Responses.Error>>
-) = ChildLocation(callback::accept).execute(childToken)!!
+) = ChildLocation(callback::accept).execute(childInfo)!!
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun updateChildLocation(

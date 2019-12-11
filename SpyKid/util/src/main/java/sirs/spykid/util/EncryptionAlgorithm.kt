@@ -110,10 +110,16 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
                 File(ea.filesDir, sharedSecretName.store).delete()
             }
         }
+        fun deleteKey(sharedSecretName: String) {
+            Log.d("INFO", "Deleting key '${sharedSecretName}'")
+            if (::ea.isInitialized) {
+                File(ea.filesDir, sharedSecretName).delete()
+            }
+        }
     }
 
-    fun generateSecretKey(keystoreAlias: KeyStores): SharedKey = synchronized(this) {
-        val keyFile = File(filesDir, keystoreAlias.store)
+    fun generateSecretKey(keystoreAlias: String): SharedKey = synchronized(this) {
+        val keyFile = File(filesDir, keystoreAlias)
         val key = when {
             !keyFile.exists() -> {
                 val key = SharedKey(makeRandomBytes())
@@ -130,8 +136,17 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
         }
     }
 
+    fun generateSecretKey(keystoreAlias: KeyStores): SharedKey = synchronized(this) {
+        return generateSecretKey(keystoreAlias.store)
+    }
+
     fun storeSecretKey(keystoreAlias: KeyStores, key: SharedKey) = synchronized(this) {
         val keyFile = File(filesDir, keystoreAlias.store)
+        storeSecretKey(keyFile, key)
+    }
+
+    fun storeSecretKey(keystoreAlias: String, key: SharedKey) = synchronized(this) {
+        val keyFile = File(filesDir, keystoreAlias)
         storeSecretKey(keyFile, key)
     }
 
@@ -150,8 +165,12 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
     }
 
     fun getKey(keyName: KeyStores): SharedKey? {
+        return getKey(keyName.store)
+    }
+
+    fun getKey(keyName: String): SharedKey? {
         Log.d("INFO", "Getting a key from '${keyName}' file")
-        val keyFile = File(filesDir, keyName.store)
+        val keyFile = File(filesDir, keyName)
         if (!keyFile.exists()) return null
         return getKey(keyFile).takeIf {
             it.key.isNotEmpty().also { isNotEmpty -> if (isNotEmpty) Log.d("INFO", "Was empty") }
