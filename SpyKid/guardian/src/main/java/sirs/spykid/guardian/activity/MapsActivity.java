@@ -23,10 +23,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.TreeSet;
 
 import sirs.spykid.guardian.R;
 import sirs.spykid.util.Child;
@@ -40,7 +39,7 @@ public class MapsActivity extends FragmentActivity {
 
     private Notification missingChild;
     private Notification sos;
-    private final Set<Location> seenLocations = new HashSet<>();
+    private final TreeSet<Location> seenLocations = new TreeSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,9 +69,7 @@ public class MapsActivity extends FragmentActivity {
     private void updateLocation(final GoogleMap map, final Child child, final List<Location> locations) {
         for (Location l : locations) {
             if (seenLocations.contains(l)) continue;
-            if (l.getTimestamp().isBefore(LocalDateTime.now().minus(Duration.ofMinutes(10)))) {
-                NotificationManagerCompat.from(this).notify(0, missingChild);
-            } else if (l.getSos()) {
+            if (l.getSos()) {
                 NotificationManagerCompat.from(this).notify(1, sos);
             }
             Log.d("INFO", "Location" + l);
@@ -85,6 +82,9 @@ public class MapsActivity extends FragmentActivity {
                 map.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
                 map.moveCamera(CameraUpdateFactory.newLatLng(position));
             });
+        }
+        if (!seenLocations.isEmpty() && seenLocations.last().getTimestamp().isBefore(LocalDateTime.now().minus(Duration.ofMinutes(5)))) {
+            NotificationManagerCompat.from(this).notify(0, missingChild);
         }
     }
 
