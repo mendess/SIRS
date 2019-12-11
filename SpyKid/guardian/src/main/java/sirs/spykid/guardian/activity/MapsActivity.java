@@ -78,7 +78,6 @@ public class MapsActivity extends FragmentActivity {
             }
             LatLng position = new LatLng(l.getX(), l.getY());
             this.runOnUiThread(() -> {
-                map.clear();
                 map.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
                 map.moveCamera(CameraUpdateFactory.newLatLng(position));
             });
