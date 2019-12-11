@@ -1,0 +1,23 @@
+\tikzstyle{struct}=[%
+    fill=white,
+    draw=black,
+    rectangle,
+    drop shadow,
+    minimum height=1.5cm,
+    minimum width=1cm
+]
+
+\begin{tikzpicture}[font=\ttfamily,auto]
+    \node (Server) [struct]{\textbf{\Large{Server}}};
+    \node[below left = of Server] (Child) [struct]{\textbf{\Large{Child}}};
+    \node[below right = of Server] (Guardian) [struct]{\textbf{\Large{Guardian}}};
+
+    \draw[->, very thick, to path={|- (\tikztotarget)}] (Child.north) to (Server.west)
+    node[above left = 0.3cm and 0.1cm] {\texttt{location beacon}};
+
+    \draw[->, very thick, to path={|- (\tikztotarget)}] (Guardian.north) to (Server.east)
+    node[above right = 0.3cm and 0.1cm] {\texttt{child location requests}};
+    \draw[->, very thick, to path={|- (\tikztotarget)}] (Server.south) to (Guardian)
+    node[below right = 2cm and -2.1cm of Server] {\texttt{child locations}};
+
+\end{tikzpicture}
