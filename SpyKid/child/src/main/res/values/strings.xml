@@ -6,4 +6,6 @@
     <string name="user_hint">enter username</string>
     <string name="pass_hint">enter password</string>
     <string name="user">username</string>
+    <string name="scan">Scan Key</string>
+    <string name="broadcast">Broadcast</string>
 </resources>
