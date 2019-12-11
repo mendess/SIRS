@@ -48,7 +48,7 @@
         android:id="@+id/main_error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#00FF0000"
+        android:textColor="#FF0000"
         app:layout_constraintBottom_toTopOf="@+id/signIn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private void normalSignUp(@NonNull String user, String password) {
         ServerApiKt.registerGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
-                err -> runOnUiThread(() -> error.setText("Error signing up: " + err))
+                err -> runOnUiThread(() -> error.setText("Error registering: " + err))
         ));
     }
 
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private void normalSignIn(String user, String password) {
         ServerApiKt.loginGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
-                err -> runOnUiThread(() -> error.setText("Error signing in: " + err))
+                err -> runOnUiThread(() -> error.setText("Error logging in: " + err))
         ));
     }
 }

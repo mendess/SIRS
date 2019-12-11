@@ -262,6 +262,7 @@ class Responses {
         InvalidChildOrGuardian,
         InvalidGuardian,
         InvalidPacketFormat,
+        InvalidUsernameOrPassword,
         NotGuarding,
         NotLoggedIn,
         Other,
@@ -283,6 +284,7 @@ class Responses {
             "NotGuarding" -> Error.NotGuarding
             "NotLoggedIn" -> Error.NotLoggedIn
             "UsernameTaken" -> Error.UsernameTaken
+            "InvalidUsernameOrPassword" -> Error.InvalidUsernameOrPassword
             else -> Error.Other
         }
 

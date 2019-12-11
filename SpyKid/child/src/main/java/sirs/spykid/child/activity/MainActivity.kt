@@ -1,11 +1,13 @@
 package sirs.spykid.child.activity
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +20,8 @@ import java.util.function.Consumer
 @TargetApi(Build.VERSION_CODES.O)
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var error: TextView
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +33,7 @@ class MainActivity : AppCompatActivity() {
                 this.findViewById<EditText>(R.id.password).text.toString().trim()
             )
         }
+        this.error = findViewById(R.id.main_error)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -38,16 +43,13 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun normalSignIn(user: String, password: String) {
         loginChild(user, password, Consumer { response ->
             response.match(
                 Consumer { startActivityAfterLogin(user) },
-                Consumer { err ->
-                    runOnUiThread {
-                        Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show()
-                    }
-                })
+                Consumer { err -> runOnUiThread { error.text = "Error logging in: $err" } })
         })
     }
 }
