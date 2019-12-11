@@ -21,6 +21,7 @@ pub enum Error {
     NotGuarding,
     NotLoggedIn,
     Other,
+    UsernameTaken,
 }
 
 impl ErrorT for Error {}

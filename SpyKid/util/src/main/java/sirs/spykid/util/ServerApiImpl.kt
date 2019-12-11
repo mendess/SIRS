@@ -265,6 +265,7 @@ class Responses {
         NotGuarding,
         NotLoggedIn,
         Other,
+        UsernameTaken,
 
         NoSecretKeySet,
     }
@@ -281,6 +282,7 @@ class Responses {
             "InvalidPacketFormat" -> Error.InvalidPacketFormat
             "NotGuarding" -> Error.NotGuarding
             "NotLoggedIn" -> Error.NotLoggedIn
+            "UsernameTaken" -> Error.UsernameTaken
             else -> Error.Other
         }
 

@@ -53,7 +53,7 @@ impl Db {
                 use diesel::result::Error as DBError;
                 match e {
                     DBError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
-                        Error::AlreadyGuarding
+                        Error::UsernameTaken
                     }
                     _ => Error::Other,
                 }
@@ -69,11 +69,7 @@ impl Db {
             .map(GuardianId::from)
             .map_err(|e| {
                 eprintln!("Error in Db::login_guardian: {:?}", e);
-                use diesel::result::Error as DBError;
-                match e {
-                    DBError::NotFound => Error::InvalidUsernameOrPassword,
-                    _ => Error::Other,
-                }
+                Error::InvalidUsernameOrPassword
             })
     }
 
@@ -116,7 +112,7 @@ impl Db {
                     Error::InvalidGuardian
                 }
                 DBError::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
-                    Error::AlreadyGuarding
+                    Error::UsernameTaken
                 }
                 _ => Error::Other,
             }
@@ -132,11 +128,7 @@ impl Db {
             .map(ChildId::from)
             .map_err(|e| {
                 eprintln!("Error in Db::login_child: {:?}", e);
-                use diesel::result::Error as DBError;
-                match e {
-                    DBError::NotFound => Error::InvalidUsernameOrPassword,
-                    _ => Error::Other,
-                }
+                Error::InvalidUsernameOrPassword
             })
     }
 
