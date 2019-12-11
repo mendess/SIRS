@@ -4,23 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.firebase.ui.auth.AuthUI;
-import com.firebase.ui.auth.IdpResponse;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
-import java.util.Collections;
-import java.util.List;
 
 import sirs.spykid.guardian.R;
 import sirs.spykid.util.EncryptionAlgorithm;

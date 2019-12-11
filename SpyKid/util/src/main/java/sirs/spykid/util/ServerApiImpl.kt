@@ -81,20 +81,21 @@ internal class ListChildren(private val callback: (Result<Responses.ListChildren
 
 @RequiresApi(Build.VERSION_CODES.N)
 internal class ChildLocation(private val callback: (Result<Responses.ChildLocation, Responses.Error>) -> Unit) :
-    AsyncTask<ChildId, Unit, Result<Responses.ChildLocation, Responses.Error>>() {
+    AsyncTask<Pair<ChildId, String>, Unit, Result<Responses.ChildLocation, Responses.Error>>() {
     companion object {
         internal fun run(
-            childToken: ChildId
+            childToken: ChildId,
+            childName: String
         ): Result<Responses.ChildLocation, Responses.Error> =
             resultFromJson(Session.request(Requests.ChildLocation(childToken))!!)
-                .map { Responses.ChildLocation.fromJson(it) }
+                .map { Responses.ChildLocation.fromJson(it, childName) }
                 .mapErr { Responses.errorFromJson(it) }
 
     }
 
-    override fun doInBackground(vararg params: ChildId): Result<Responses.ChildLocation, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<ChildId, String>): Result<Responses.ChildLocation, Responses.Error> {
         assert(params.isNotEmpty())
-        val r = run(params[0])
+        val r = run(params[0].first, params[0].second)
         callback(r)
         return r
     }
@@ -218,10 +219,10 @@ class Responses {
 
     class ChildLocation private constructor(val locations: List<Location>) {
         companion object {
-            internal fun fromJson(json: JsonElement): ChildLocation =
+            internal fun fromJson(json: JsonElement, childName: String): ChildLocation =
                 ChildLocation(
                     json.asJsonObject.get("ChildLocation").asJsonObject.get("locations").asJsonArray
-                        .mapNotNull { Location.decrypt(it.asString) }
+                        .mapNotNull { Location.decrypt(it.asString, childName) }
                         .sortedByDescending { it.timestamp }
                 )
         }

@@ -47,14 +47,14 @@ public class AddBeaconActivity extends AppCompatActivity {
             Toast.makeText(this, "Invalid input, try again...", Toast.LENGTH_SHORT).show();
         } else {
             ServerApiKt.registerChild(username, password, r -> r.match(
-                    ok -> showQRCode(),
+                    ok -> showQRCode(username),
                     err -> runOnUiThread(() -> error.setText("Error registering child: " + err))
             ));
         }
     }
 
-    private void showQRCode() {
-        SharedKey key = crypto.generateSecretKey(EncryptionAlgorithm.KeyStores.SharedSecret);
+    private void showQRCode(String username) {
+        SharedKey key = crypto.generateSecretKey(username);
         Intent intent = new Intent(getApplicationContext(), QRActivity.class);
         intent.putExtra("key", key);
         startActivity(intent);
