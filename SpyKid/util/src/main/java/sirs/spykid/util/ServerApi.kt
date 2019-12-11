@@ -164,9 +164,10 @@ fun listChildren(callback: Consumer<Result<Responses.ListChildren, Responses.Err
 
 @RequiresApi(Build.VERSION_CODES.N)
 fun childLocation(
-    childInfo: Pair<ChildId, String>,
+    childId: ChildId,
+    childName: String,
     callback: Consumer<Result<Responses.ChildLocation, Responses.Error>>
-) = ChildLocation(callback::accept).execute(childInfo)!!
+) = ChildLocation(callback::accept).execute(Pair(childId, childName))!!
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun updateChildLocation(

@@ -92,7 +92,7 @@ public class MapsActivity extends FragmentActivity {
         new Thread(() -> {
             try {
                 while (true) {
-                    ServerApiKt.childLocation(child.getId(), r -> r.match(
+                    ServerApiKt.childLocation(child.getId(), child.getUsername(), r -> r.match(
                             ok -> updateLocation(map, child, ok.getLocations()),
                             error -> runOnUiThread(() -> Toast.makeText(this, "Error fetching location: " + error, Toast.LENGTH_SHORT).show())
                     ));
