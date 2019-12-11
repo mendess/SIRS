@@ -4,7 +4,6 @@ import android.annotation.TargetApi
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -33,9 +32,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun startActivityAfterLogin(user: String) {
-        val crypto = EncryptionAlgorithm.get(this)
-        val key = crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret) ?: {
+    private fun startActivityAfterLogin() {
+        EncryptionAlgorithm.get(this)
+        val intent = Intent(applicationContext, MenuActivity::class.java)
+        startActivity(intent)
+/*        val key = crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret) ?: {
             val intent = Intent(applicationContext, QRScanner::class.java)
             startActivity(intent)
             crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)
@@ -45,13 +46,14 @@ class MainActivity : AppCompatActivity() {
                 Intent(applicationContext, BeaconActivity::class.java).putExtra("key", it)
             startActivity(intent2)
         }
+ */
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun normalSignIn(user: String, password: String) {
         loginChild(user, password, Consumer { response ->
             response.match(
-                Consumer { startActivityAfterLogin(user) },
+                Consumer { startActivityAfterLogin() },
                 Consumer { err ->
                     runOnUiThread {
                         Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show()
