@@ -32,28 +32,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun startActivityAfterLogin() {
+    private fun startActivityAfterLogin(user: String) {
         EncryptionAlgorithm.get(this)
-        val intent = Intent(applicationContext, MenuActivity::class.java)
+        val intent = Intent(applicationContext, MenuActivity::class.java).putExtra("user", user)
         startActivity(intent)
-/*        val key = crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret) ?: {
-            val intent = Intent(applicationContext, QRScanner::class.java)
-            startActivity(intent)
-            crypto.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)
-        }()
-        key?.let {
-            val intent2 =
-                Intent(applicationContext, BeaconActivity::class.java).putExtra("key", it)
-            startActivity(intent2)
-        }
- */
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun normalSignIn(user: String, password: String) {
         loginChild(user, password, Consumer { response ->
             response.match(
-                Consumer { startActivityAfterLogin() },
+                Consumer { startActivityAfterLogin(user) },
                 Consumer { err ->
                     runOnUiThread {
                         Toast.makeText(this, err.name, Toast.LENGTH_SHORT).show()

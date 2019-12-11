@@ -53,8 +53,9 @@ class ExampleInstrumentedTest {
     @Test
     fun getLocation() {
         registerGuardian(generateString(), generateString(), Consumer {}).get().unwrap()
-        val cid = registerChild(generateString(), generateString(), Consumer {}).get().unwrap()
-        childLocation(cid.childId, Consumer {}).get().unwrap()
+        val childUsername = generateString()
+        val cid = registerChild(childUsername, generateString(), Consumer {}).get().unwrap()
+        childLocation(cid.childId, childUsername, Consumer {}).get().unwrap()
     }
 
     @Test
@@ -66,9 +67,9 @@ class ExampleInstrumentedTest {
         val childPassword = generateString()
         val cid = registerChild(childUsername, childPassword, Consumer {}).get().unwrap()
         loginChild(childUsername, childPassword, Consumer {}).get().unwrap()
-        updateChildLocation(Location(2.3, 4.5, LocalDateTime.now()), Consumer {}).get().unwrap()
+        updateChildLocation(Location(2.3, 4.5, LocalDateTime.now()), childUsername, Consumer {}).get().unwrap()
         loginGuardian(guardianUsername, guardianPassword, Consumer {}).get().unwrap()
-        val l = childLocation(cid.childId, Consumer {}).get().unwrap()
+        val l = childLocation(cid.childId, childUsername, Consumer {}).get().unwrap()
         assert(l.locations.any {
             it.x > 2.0 && it.x < 3.0
                     && it.y > 4.0 && it.y < 5.0
@@ -83,23 +84,5 @@ class ExampleInstrumentedTest {
         val password = generateString()
         registerChild(username, password, Consumer {}).get().unwrap()
         loginChild(username, password, Consumer {}).get().unwrap()
-    }
-
-    @Test
-    fun locationEncryptionAndDecryption() {
-        val context = InstrumentationRegistry.getInstrumentation().context
-        val ea = EncryptionAlgorithm(context.filesDir)
-        val (gUsername, gPassword) = Pair(generateString(), generateString())
-        val (cUsername, cPassword) = Pair(generateString(), generateString())
-        registerGuardian(gUsername, gPassword, Consumer {}).get().unwrap()
-        val cid = registerChild(cUsername, cPassword, Consumer {}).get().unwrap().childId
-        ea.generateSecretKey(EncryptionAlgorithm.KeyStores.SharedSecret)
-        loginChild(cUsername, cPassword, Consumer {}).get().unwrap()
-        val locationBefore =
-            Random().let { Location(it.nextDouble(), it.nextDouble(), LocalDateTime.now()) }
-        updateChildLocation(locationBefore, Consumer {}).get().unwrap()
-        loginGuardian(gUsername, gPassword, Consumer {}).get().unwrap()
-        val locationAfter = childLocation(cid, Consumer {}).get().unwrap().locations[0]
-        assert(locationBefore == locationAfter) { "Before: $locationBefore | After $locationAfter" }
     }
 }

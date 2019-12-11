@@ -154,21 +154,22 @@ internal class LoginChild(private val callback: (Result<Responses.LoginChild, Re
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal class UpdateChildLocation(private val callback: (Result<Responses.UpdateChildLocation, Responses.Error>) -> Unit) :
-    AsyncTask<Location, Unit, Result<Responses.UpdateChildLocation, Responses.Error>>() {
+    AsyncTask<Pair<Location, String>, Unit, Result<Responses.UpdateChildLocation, Responses.Error>>() {
     companion object {
         internal fun run(
-            location: Location
+            location: Location,
+            username: String
         ): Result<Responses.UpdateChildLocation, Responses.Error> =
-            Session.request(Requests.UpdateChildLocation(location))?.let { r ->
+            Session.request(Requests.UpdateChildLocation(location, username))?.let { r ->
                 resultFromJson(r)
                     .map { Responses.UpdateChildLocation.fromJson(it) }
                     .mapErr { Responses.errorFromJson(it) }
             } ?: Err(Responses.noSecretKey())
     }
 
-    override fun doInBackground(vararg params: Location): Result<Responses.UpdateChildLocation, Responses.Error> {
+    override fun doInBackground(vararg params: Pair<Location, String>): Result<Responses.UpdateChildLocation, Responses.Error> {
         assert(params.isNotEmpty())
-        val r = run(params[0])
+        val r = run(params[0].first, params[0].second)
         callback(r)
         return r
     }
@@ -367,9 +368,9 @@ internal class Requests {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    internal class UpdateChildLocation(private val location: Location) : ToJson {
+    internal class UpdateChildLocation(private val location: Location, private val username: String) : ToJson {
         override fun toJson(): String? =
-            location.encrypt()?.toString()?.let { l ->
+            location.encrypt(username)?.toString()?.let { l ->
                 JsonObject().run {
                     add("UpdateChildLocation", JsonObject().apply {
                         add("location", JsonPrimitive(l))

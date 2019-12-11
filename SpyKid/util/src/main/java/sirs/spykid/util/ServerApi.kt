@@ -43,26 +43,10 @@ data class Location(
             return arrayOfNulls(size)
         }
 
-        internal fun decrypt(data: String): Location? {
+        internal fun decrypt(data: String, keyName: String): Location? {
             Log.d("INFO", "Decrypting this location: '$data'")
             return EncryptionAlgorithm.tryGet()?.let { ea ->
-                ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
-                    String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
-                }
-            }?.split('|')?.let {
-                Location(
-                    it[0].toDouble(),
-                    it[1].toDouble(),
-                    LocalDateTime.parse(it[2]),
-                    it.getOrNull(3)?.toBoolean() ?: false
-                )
-            }
-        }
-
-        internal fun decrypt(data: String, username: String): Location? {
-            Log.d("INFO", "Decrypting this location: '$data'")
-            return EncryptionAlgorithm.tryGet()?.let { ea ->
-                ea.getKey(username)?.let {
+                ea.getKey(keyName)?.let {
                     String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
                 }
             }?.split('|')?.let {
@@ -71,9 +55,9 @@ data class Location(
         }
     }
 
-    internal fun encrypt(): Packet? {
+    internal fun encrypt(keyName: String): Packet? {
         return EncryptionAlgorithm.tryGet()?.let { ea ->
-            ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
+            ea.getKey(keyName)?.let {
                 EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp|$sos".toByteArray())
             }
         }.also {
@@ -172,5 +156,6 @@ fun childLocation(
 @RequiresApi(Build.VERSION_CODES.O)
 fun updateChildLocation(
     location: Location,
+    username: String,
     callback: Consumer<Result<Responses.UpdateChildLocation, Responses.Error>>
-) = UpdateChildLocation(callback::accept).execute(location)!!
+) = UpdateChildLocation(callback::accept).execute(Pair(location, username))!!

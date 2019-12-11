@@ -1,18 +1,15 @@
 package sirs.spykid.child.activity
 
-import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import sirs.spykid.child.R
-import sirs.spykid.util.EncryptionAlgorithm
 import sirs.spykid.util.Location
 import sirs.spykid.util.updateChildLocation
 import java.time.Instant
@@ -23,25 +20,22 @@ import java.util.function.Consumer
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-@RequiresApi(Build.VERSION_CODES.O)
 class BeaconActivity : AppCompatActivity() {
 
+    private lateinit var username: String
     private val lastLocationLock = ReentrantReadWriteLock()
     private var lastLocation: Location? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_beacon)
+        username = intent.getStringExtra("user")!!
         findViewById<Button>(R.id.button_sos).setOnClickListener {
             lastLocationLock.read {
                 lastLocation?.let {
-                    updateChildLocation(it.copy(sos = true), Consumer { })
+                    updateChildLocation(it.copy(sos = true), username , Consumer { })
                 }
             }
-        }
-        findViewById<Button>(R.id.beacon_delete_key).setOnClickListener {
-            EncryptionAlgorithm.deleteKey(EncryptionAlgorithm.KeyStores.SharedSecret)
-            finish()
         }
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -61,7 +55,7 @@ class BeaconActivity : AppCompatActivity() {
                             TimeZone.getDefault().toZoneId()
                         )
                     )
-                    updateChildLocation(l, Consumer { Log.d("INFO", "Location '$l' sent") })
+                    updateChildLocation(l, username, Consumer { Log.d("INFO", "Location '$l' sent") })
                     lastLocationLock.write {
                         lastLocation = l
                     }

@@ -31,7 +31,7 @@ public class AddBeaconActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_beacon);
         userInput = findViewById(R.id.user_input);
         passInput = findViewById(R.id.password_input);
-        error = findViewById(R.id.add_becon_error);
+        error = findViewById(R.id.add_beacon_error);
         crypto = EncryptionAlgorithm.Companion.get(this);
         findViewById(R.id.submit_bttn).setOnClickListener(v -> createUser());
     }

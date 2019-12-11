@@ -47,7 +47,7 @@
         app:layout_constraintVertical_bias="0.49" />
 
     <TextView
-        android:id="@+id/add_becon_error"
+        android:id="@+id/add_beacon_error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FF0000"

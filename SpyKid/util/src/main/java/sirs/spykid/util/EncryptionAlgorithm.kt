@@ -179,9 +179,7 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
         }
     }
 
-    enum class KeyStores(internal val store: String) {
-        SharedSecret("SharedSecret")
-    }
+    enum class KeyStores(internal val store: String)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
