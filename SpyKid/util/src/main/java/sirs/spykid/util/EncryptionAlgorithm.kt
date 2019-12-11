@@ -23,6 +23,7 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.experimental.and
 
 
+@Suppress("SpellCheckingInspection")
 const val PUBLIC_KEY =
     "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwmi6s7bKqRiABSbjqd3s" +
             "hoK515C/n4piIOCWEhdpSFNrLrDlcSykFfSyG9X2NxV4Vi1Kps6MoXojh+79V5wM" +
@@ -103,19 +104,6 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
             cipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(packet.iv))
             return cipher.doFinal(packet.payload)
         }
-
-        fun deleteKey(sharedSecretName: KeyStores) {
-            Log.d("INFO", "Deleting key '${sharedSecretName}'")
-            if (::ea.isInitialized) {
-                File(ea.filesDir, sharedSecretName.store).delete()
-            }
-        }
-        fun deleteKey(sharedSecretName: String) {
-            Log.d("INFO", "Deleting key '${sharedSecretName}'")
-            if (::ea.isInitialized) {
-                File(ea.filesDir, sharedSecretName).delete()
-            }
-        }
     }
 
     fun generateSecretKey(keystoreAlias: String): SharedKey = synchronized(this) {
@@ -134,15 +122,6 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
         } else {
             key
         }
-    }
-
-    fun generateSecretKey(keystoreAlias: KeyStores): SharedKey = synchronized(this) {
-        return generateSecretKey(keystoreAlias.store)
-    }
-
-    fun storeSecretKey(keystoreAlias: KeyStores, key: SharedKey) = synchronized(this) {
-        val keyFile = File(filesDir, keystoreAlias.store)
-        storeSecretKey(keyFile, key)
     }
 
     fun storeSecretKey(keystoreAlias: String, key: SharedKey) = synchronized(this) {
@@ -164,10 +143,6 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
         return SharedKey.decode(InputStreamReader(keyFile.inputStream()).readText())
     }
 
-    fun getKey(keyName: KeyStores): SharedKey? {
-        return getKey(keyName.store)
-    }
-
     fun getKey(keyName: String): SharedKey? {
         Log.d("INFO", "Getting a key from '${keyName}' file")
         val keyFile = File(filesDir, keyName)
@@ -178,8 +153,6 @@ class EncryptionAlgorithm internal constructor(private val filesDir: File) {
             Log.d("INFO", "Got this key: '${it?.encoded}'")
         }
     }
-
-    enum class KeyStores(internal val store: String)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

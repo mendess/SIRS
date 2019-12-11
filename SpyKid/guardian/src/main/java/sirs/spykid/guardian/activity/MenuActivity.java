@@ -26,7 +26,7 @@ import sirs.spykid.util.ServerApiKt;
 public class MenuActivity extends AppCompatActivity {
 
     private ListView listView;
-    private List<PrettyChild> children = new ArrayList<>();
+    private final List<PrettyChild> children = new ArrayList<>();
     private TextView error;
 
     @Override
@@ -39,9 +39,7 @@ public class MenuActivity extends AppCompatActivity {
             startActivityForResult(intent, 0);
             listChildren();
         });
-        findViewById(R.id.refresh_button).setOnClickListener(v -> {
-            listChildren();
-        });
+        findViewById(R.id.refresh_button).setOnClickListener(v -> listChildren());
 
         listChildren();
         listView = findViewById(R.id.beacon_list);
@@ -73,7 +71,7 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private class PrettyChild {
-        private Child child;
+        private final Child child;
 
         private PrettyChild(Child child) {
             this.child = child;

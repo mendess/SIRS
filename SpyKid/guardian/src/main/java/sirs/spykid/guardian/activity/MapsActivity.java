@@ -36,7 +36,7 @@ import sirs.spykid.util.ServerApiKt;
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class MapsActivity extends FragmentActivity {
 
-    private static final String NOTF_CHANNEL_ID = "Alerts";
+    private static final String NOTIFY_CHANNEL_ID = "Alerts";
 
     private Notification missingChild;
     private Notification sos;
@@ -53,13 +53,13 @@ public class MapsActivity extends FragmentActivity {
             mapFragment.getMapAsync(map -> startLocationListener(map, child));
         }
         createNotificationChannel();
-        this.missingChild = new NotificationCompat.Builder(this, NOTF_CHANNEL_ID)
+        this.missingChild = new NotificationCompat.Builder(this, NOTIFY_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Oh no 😱")
                 .setContentText("We can't find your child!")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .build();
-        this.sos = new NotificationCompat.Builder(this, NOTF_CHANNEL_ID)
+        this.sos = new NotificationCompat.Builder(this, NOTIFY_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("️⚠️ Your child has sent an sos! ⚠️")
                 .setContentText("Go save them!!")
@@ -111,7 +111,7 @@ public class MapsActivity extends FragmentActivity {
             String name = getString(R.string.channel_name);
             String descriptionText = getString(R.string.channel_description);
             int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel(NOTF_CHANNEL_ID, name, importance);
+            NotificationChannel channel = new NotificationChannel(NOTIFY_CHANNEL_ID, name, importance);
             channel.setDescription(descriptionText);
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             Objects.requireNonNull(notificationManager).createNotificationChannel(channel);

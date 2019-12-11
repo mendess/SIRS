@@ -7,7 +7,6 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.firebase.ui.auth.AuthUI
 import sirs.spykid.child.R
 import sirs.spykid.util.EncryptionAlgorithm
 
