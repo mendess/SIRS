@@ -7,24 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
 
-    <Button
-        android:id="@+id/firebase_signin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:enabled="true"
-        android:text="@string/fui_sign_in_with_google"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/username"
-        app:layout_constraintHorizontal_bias="0.496"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/username"
-        app:layout_constraintTop_toBottomOf="@+id/username"
-        app:layout_constraintVertical_bias="0.875" />
-
     <EditText
         android:id="@+id/username"
         android:layout_width="wrap_content"
@@ -41,38 +23,37 @@
         android:id="@+id/password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="72dp"
         android:ems="10"
         android:hint="@string/pass_hint"
         android:inputType="textPassword"
-        app:layout_constraintBottom_toTopOf="@+id/firebase_signin"
         app:layout_constraintEnd_toEndOf="@+id/username"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/username"
-        app:layout_constraintTop_toBottomOf="@+id/username"
-        app:layout_constraintVertical_bias="0.225" />
+        app:layout_constraintTop_toBottomOf="@+id/username" />
 
     <Button
         android:id="@+id/signin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/signin_button_text"
-        app:layout_constraintBottom_toTopOf="@+id/firebase_signin"
+        android:layout_marginTop="160dp"
+        android:text="@string/signIn_button_text"
         app:layout_constraintEnd_toEndOf="@+id/password"
-        app:layout_constraintHorizontal_bias="0.504"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="@+id/password"
-        app:layout_constraintTop_toBottomOf="@+id/password"
-        app:layout_constraintVertical_bias="0.519" />
+        app:layout_constraintTop_toBottomOf="@+id/password" />
 
     <Button
         android:id="@+id/signup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/fui_title_register_email"
-        app:layout_constraintBottom_toTopOf="@+id/firebase_signin"
+        android:text="@string/signUp_button_text"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/signin"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/signin"
-        app:layout_constraintTop_toBottomOf="@+id/signin" />
+        app:layout_constraintTop_toBottomOf="@+id/signin"
+        app:layout_constraintVertical_bias="0.221" />
 
     <TextView
         android:id="@+id/main_error"

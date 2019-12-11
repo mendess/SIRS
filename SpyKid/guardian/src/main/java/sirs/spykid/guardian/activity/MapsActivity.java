@@ -23,8 +23,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import sirs.spykid.guardian.R;
 import sirs.spykid.util.Child;
@@ -37,6 +39,8 @@ public class MapsActivity extends FragmentActivity {
     private static final String NOTF_CHANNEL_ID = "Alerts";
 
     private Notification missingChild;
+    private Notification sos;
+    private final Set<Location> seenLocations = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,18 +57,29 @@ public class MapsActivity extends FragmentActivity {
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Oh no 😱")
                 .setContentText("We can't find your child!")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .build();
+        this.sos = new NotificationCompat.Builder(this, NOTF_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("️⚠️ Your child has sent an sos! ⚠️")
+                .setContentText("Go save them!!")
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .build();
     }
 
     private void updateLocation(final GoogleMap map, final Child child, final List<Location> locations) {
-        if (!locations.isEmpty()) {
-            Location location = locations.get(0);
-            if (location.getTimestamp().isBefore(LocalDateTime.now().minus(Duration.ofMinutes(10)))) {
+        for (Location l : locations) {
+            if (seenLocations.contains(l)) continue;
+            if (l.getTimestamp().isBefore(LocalDateTime.now().minus(Duration.ofMinutes(10)))) {
                 NotificationManagerCompat.from(this).notify(0, missingChild);
+            } else if (l.getSos()) {
+                NotificationManagerCompat.from(this).notify(1, sos);
             }
-            Log.d("INFO", "Location" + location);
-            LatLng position = new LatLng(location.getX(), location.getY());
+            Log.d("INFO", "Location" + l);
+            synchronized (seenLocations) {
+                seenLocations.add(l);
+            }
+            LatLng position = new LatLng(l.getX(), l.getY());
             this.runOnUiThread(() -> {
                 map.clear();
                 map.addMarker(new MarkerOptions().position(position).title(child.getUsername()));
@@ -79,7 +94,7 @@ public class MapsActivity extends FragmentActivity {
                 while (true) {
                     ServerApiKt.childLocation(child.getId(), r -> r.match(
                             ok -> updateLocation(map, child, ok.getLocations()),
-                            error -> Log.d("INFO", "Error fetching location")//Toast.makeText(this, "Error fetching location", Toast.LENGTH_SHORT).show()
+                            error -> runOnUiThread(() -> Toast.makeText(this, "Error fetching location: " + error, Toast.LENGTH_SHORT).show())
                     ));
                     Thread.sleep(3000);
                 }
@@ -94,7 +109,7 @@ public class MapsActivity extends FragmentActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             String name = getString(R.string.channel_name);
             String descriptionText = getString(R.string.channel_descritpion);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(NOTF_CHANNEL_ID, name, importance);
             channel.setDescription(descriptionText);
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

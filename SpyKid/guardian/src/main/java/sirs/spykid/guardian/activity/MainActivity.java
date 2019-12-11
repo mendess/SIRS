@@ -30,21 +30,15 @@ import sirs.spykid.util.ServerApiKt;
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class MainActivity extends AppCompatActivity {
 
-    private List<AuthUI.IdpConfig> providers;
-    private static final int MY_REQUEST_CODE = 7117;
     private TextView error;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Initialize providers
-        providers = Collections.singletonList(new AuthUI.IdpConfig.GoogleBuilder().build());
-        Log.d("INFO", "Initializing encryption algorithm");
         EncryptionAlgorithm.Companion.get(this);
 
         error = findViewById(R.id.main_error);
-        findViewById(R.id.firebase_signin).setOnClickListener(v -> showSignInOptions());
         findViewById(R.id.signin).setOnClickListener(v -> normalSignIn(
                 this.<EditText>findViewById(R.id.username).getText().toString().trim(),
                 this.<EditText>findViewById(R.id.password).getText().toString().trim()
@@ -55,66 +49,13 @@ public class MainActivity extends AppCompatActivity {
         ));
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MY_REQUEST_CODE) {
-            IdpResponse idpResponse = IdpResponse.fromResultIntent(data);
-
-            if (resultCode == RESULT_OK) {
-                //Get User
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    login(user);
-                } else {
-                    Toast.makeText(this, "Failed to authenticate", Toast.LENGTH_SHORT).show();
-                }
-
-            } else {
-                if (idpResponse != null && idpResponse.getError() != null) {
-                    Toast.makeText(this, idpResponse.getError().getMessage(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "idpResponse is null", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-    }
-
-    private void startActivityAfterLogin(FirebaseUser user) {
-        Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
-        intent.putExtra("user", user);
-        startActivity(intent);
-    }
-
     private void startActivityAfterLogin() {
         Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
         startActivity(intent);
     }
 
-    private void showSignInOptions() {
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .setTheme(R.style.MyTheme)
-                        .build(), MY_REQUEST_CODE);
-    }
-
     @SuppressLint("SetTextI18n")
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void login(@NonNull FirebaseUser user) {
-        //noinspection ConstantConditions
-        ServerApiKt.registerGuardian(user.getEmail(), user.getUid(), r -> r.match(
-                ok -> startActivityAfterLogin(user),
-                err -> runOnUiThread(() -> error.setText("Error logging in: " + err))
-        ));
-    }
-
-    @SuppressLint("SetTextI18n")
-    @RequiresApi(api = Build.VERSION_CODES.N)
     private void normalSignUp(@NonNull String user, String password) {
-        Toast.makeText(this, "User" + user + " Password " + password, Toast.LENGTH_SHORT).show();
         ServerApiKt.registerGuardian(user, password, r -> r.match(
                 ok -> startActivityAfterLogin(),
                 err -> runOnUiThread(() -> error.setText("Error signing up: " + err))

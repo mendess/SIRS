@@ -18,14 +18,27 @@ import sirs.spykid.util.updateChildLocation
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.Consumer
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 @RequiresApi(Build.VERSION_CODES.O)
 class BeaconActivity : AppCompatActivity() {
 
+    private val lastLocationLock = ReentrantReadWriteLock()
+    private var lastLocation: Location? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_beacon)
+        findViewById<Button>(R.id.button_sos).setOnClickListener {
+            lastLocationLock.read {
+                lastLocation?.let {
+                    updateChildLocation(it.copy(sos = true), Consumer { })
+                }
+            }
+        }
         findViewById<Button>(R.id.beacon_delete_key).setOnClickListener {
             EncryptionAlgorithm.deleteKey(EncryptionAlgorithm.KeyStores.SharedSecret)
             finish()
@@ -41,7 +54,7 @@ class BeaconActivity : AppCompatActivity() {
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
-                for (location in locationResult.locations) {
+                for (location in locationResult.locations.sortedBy { it.time }) {
                     val l = Location(
                         location.latitude, location.longitude, LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(location.time),
@@ -49,6 +62,9 @@ class BeaconActivity : AppCompatActivity() {
                         )
                     )
                     updateChildLocation(l, Consumer { Log.d("INFO", "Location '$l' sent") })
+                    lastLocationLock.write {
+                        lastLocation = l
+                    }
                 }
             }
         }

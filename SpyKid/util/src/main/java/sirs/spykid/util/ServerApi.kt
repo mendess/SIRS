@@ -9,7 +9,15 @@ import java.time.LocalDateTime
 import java.util.function.Consumer
 
 @RequiresApi(Build.VERSION_CODES.O)
-data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) : Parcelable {
+data class Location(
+    val x: Double,
+    val y: Double,
+    val timestamp: LocalDateTime,
+    val sos: Boolean = false
+) : Parcelable, Comparable<Location> {
+
+    override fun compareTo(other: Location): Int = this.timestamp.compareTo(other.timestamp)
+
     constructor(parcel: Parcel) : this(
         parcel.readDouble(),
         parcel.readDouble(),
@@ -42,7 +50,12 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
                     String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
                 }
             }?.split('|')?.let {
-                Location(it[0].toDouble(), it[1].toDouble(), LocalDateTime.parse(it[2]))
+                Location(
+                    it[0].toDouble(),
+                    it[1].toDouble(),
+                    LocalDateTime.parse(it[2]),
+                    it.getOrNull(3)?.toBoolean() ?: false
+                )
             }
         }
     }
@@ -50,7 +63,7 @@ data class Location(val x: Double, val y: Double, val timestamp: LocalDateTime) 
     internal fun encrypt(): Packet? {
         return EncryptionAlgorithm.tryGet()?.let { ea ->
             ea.getKey(EncryptionAlgorithm.KeyStores.SharedSecret)?.let {
-                EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp".toByteArray())
+                EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp|$sos".toByteArray())
             }
         }.also {
             Log.d("INFO", "Encrypted ${this} into '$it'")
