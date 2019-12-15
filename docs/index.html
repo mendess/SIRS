@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>Spykid</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reset.css">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/serif.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+
+<section id="spykid" class="title-slide slide level1"><h1>Spykid</h1><ul>
+<li>Eva Verboom</li>
+<li>Felipe Gorostiaga</li>
+<li>Pedro Mendes</li>
+</ul></section>
+<section><section id="the-problem" class="title-slide slide level1"><h1>The problem</h1><p>As a guardian you might want to track your child’s location to make sure they don’t stray too far from where they should be.</p></section><section id="requirements" class="slide level2">
+<h2>Requirements</h2>
+<p>Among others it’s important that the child’s location be kept in absolute secret as it is a very sensitive piece of information.</p>
+</section><section id="trust-assumptions" class="slide level2">
+<h2>Trust Assumptions</h2>
+<p>There are 3 actors in the system:</p>
+<ul>
+<li>Server</li>
+<li>Guardians</li>
+<li>Children</li>
+</ul>
+</section></section>
+<section><section id="demo" class="title-slide slide level1"><h1>Demo</h1></section><section id="section" class="slide level2">
+<h2></h2>
+<h3 id="demo-1">Demo</h3>
+<video data-autoplay src="sirs_demo.mp4">
+</video>
+</section></section>
+    </div>
+  </div>
+
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
