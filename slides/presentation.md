@@ -35,6 +35,14 @@ Este nice notes para eu saber que dizer
 - Client ⇔ Server
 - Guardian ⇔ Child
 
+## Secure Protocols
+
+- AES in CBC mode for session keys and the child/guardian shared secret
+- RSA for server authentication with a private/public key pair
+
+# Results
+
+![](./app_use.jpeg)
 
 # Demo
 
