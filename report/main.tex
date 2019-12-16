@@ -28,13 +28,16 @@
 \title{Spy Kid}
 \author{%
     \begin{tabular}{lll}
-        95145 & Eva Verboom & \multirow{2}{*}{\includegraphics[height=3cm]{images/eva_square.jpeg}} \\
-        \multicolumn{2}{l}{\text{eva.verboom@tecnico.ulisboa.pt}} & \\[2.1cm]
+        95145 & Eva Verboom &
+        \multirow{2}{*}{\includegraphics[height=3cm]{images/eva_square.jpeg}} \\
+        \multicolumn{2}{l}{eva.verboom@tecnico.ulisboa.pt} & \\[2.1cm]
+
         95383 & Felipe Gorostiaga &
-        \multirow{2}{\includegraphics[height=3cm]{images/felipe.jpg}} \\
+        \multirow{2}{*}{\includegraphics[height=3cm]{images/felipe.jpg}} \\
         \multicolumn{2}{l}{felipe.gorostiaga@tecnico.ulisboa.pt} & \\[2.1cm]
+
         97144 & Pedro Mendes &
-        \multirow{2}{\includegraphics[height=3cm]{images/pedro.jpg}} \\
+        \multirow{2}{*}{\includegraphics[height=3cm]{images/pedro.jpg}} \\
         \multicolumn{2}{l}{pedromendesfc@tecnico.ulisboa.pt} & \\[2.1cm]
     \end{tabular}
 }
@@ -72,7 +75,7 @@
 
 %% I  Problem (Given the chosen scenario, where is security necessary? What is the main problem being solved? Use around 200 words)
 \section{The Problem}
-During this project we have been working on the development of a secure child location application called \emph{SpyKid}. As a guardian, one might want to track your children to ensure that they are not straying too far from where they are supposed to be and in case something is wrong, to find them. Of course, the location of a person, especially a child, is very sensitive information. Nobody should to be able to track your children, to find them or misuse the information in any way. Therefore, accessing the information should only be possible for authorised guardians and secure communication of the child's location is required as well as secure storage on remote servers. This implies that also the servers that are storing the location data and people that have access to these servers should not be able to read the location of any child. Besides, proper authentication of all clients is required in order to give the right people access to the right information. In the following the explicit requirements of the application and the trust assumptions made in the development will be discussed. 
+During this project we have been working on the development of a secure child location application called \emph{SpyKid}. As a guardian, one might want to track your children to ensure that they are not straying too far from where they are supposed to be and in case something is wrong, to find them. Of course, the location of a person, especially a child, is very sensitive information. Nobody should to be able to track your children, to find them or misuse the information in any way. Therefore, accessing the information should only be possible for authorised guardians and secure communication of the child's location is required as well as secure storage on remote servers. This implies that also the servers that are storing the location data and people that have access to these servers should not be able to read the location of any child. Besides, proper authentication of all clients is required in order to give the right people access to the right information. In the following the explicit requirements of the application and the trust assumptions made in the development will be discussed.
 
 %% a. Requirements (Which security requirements were identified for the solution? Present as a list)
 \subsection{Requirements}
@@ -95,7 +98,7 @@ There are three groups of actors to be distinguished here: the children, the gua
 
 %% Proposed solution (overview with diagram and explanation with around 200 words or less)
 \section{Implementation}
-This section describes the the configuration of the application: how different machines are connected, which communication channels are used and how they are used. Special attention is given to the security of the channels and protocols used by the system. 
+This section describes the the configuration of the application: how different machines are connected, which communication channels are used and how they are used. Special attention is given to the security of the channels and protocols used by the system.
 
 %% a) Deployment (describe distinct machines and how they will be interconnected)
 \subsection{Deployment}
@@ -105,7 +108,7 @@ The system consists of three moving parts:
     \item Multiple guardian clients;
     \item Multiple child clients.
 \end{itemize}
-A graphical representation of the machines and the way they are interconnected is shown in \autoref{fig:graph}. To achieve secure communication between the server and the child and guardian clients, both require appropriate methods for authentication. Details of these methods will be discussed later on. 
+A graphical representation of the machines and the way they are interconnected is shown in \autoref{fig:graph}. To achieve secure communication between the server and the child and guardian clients, both require appropriate methods for authentication. Details of these methods will be discussed later on.
 
 \begin{figure}[ht!]
     \centering
@@ -118,24 +121,24 @@ The main technology used for developing the applications is Android Studio \cite
 %% Secure channel(s) to configure (identify communication entities; existing library/tool to use;
 %% what keys will exist and how will they be distributed)
 \subsection{Secure channels}
-First of all, a guardian should establish authentication with the server. This is done with a username and a local only password, which is always hashed before sending it to the server. Besides, the username is encoded in a byte-array and appended to the password before hashing as a salt, in order to prevent rainbow-table attacks. Communication with the server is done over TCP with session keys, more on this in the next section.  
+First of all, a guardian should establish authentication with the server. This is done with a username and a local only password, which is always hashed before sending it to the server. Besides, the username is encoded in a byte-array and appended to the password before hashing as a salt, in order to prevent rainbow-table attacks. Communication with the server is done over TCP with session keys, more on this in the next section.
 
 The child and guardian clients need to agree on a private key that only they know, to encrypt every piece of data they send to the server. In order for the agreement of the keys to not be intercepted, this agreement is made physically. This is implemented by generating a 256-bit key with random values with the \texttt{SecureRandom} class \cite{secure_random} from the \texttt{java.security} package and storing it in a file on the device. Sharing the key is done by translating the key into a QR code in the guardian client, this code can then be scanned by a child application and also stored in a file as their shared secret. Afterwards the child client establishes a secure channel with the server using the same method the guardian client uses.
 
 %% Secure protocol(s) to develop (identify communication entities; language to use for
 %% implementation; what keys will exist and how will they be distributed)
 \subsection{Secure Protocols}
-All symmetric encryption and decryption done in this application will use a 256-bit key and follow the AES encryption algorithm with Cipher Block Chaining mode as is recommended by the Android Developer Community \cite{cipher_recommendation}. We are using PKCS5 padding because OpenSSL \cite{openssl} uses this by default. Encryption and decryption is done using the \texttt{javax.crypto} package on the Android clients and OpenSSL on the server. 
+All symmetric encryption and decryption done in this application will use a 256-bit key and follow the AES encryption algorithm with Cipher Block Chaining mode as is recommended by the Android Developer Community \cite{cipher_recommendation}. We are using PKCS5 padding because OpenSSL \cite{openssl} uses this by default. Encryption and decryption is done using the \texttt{javax.crypto} package on the Android clients and OpenSSL on the server.
 
-Effectively the entities that interact in the system are only the child and guardian clients, the server will only serve safe remote storage for the data. By using a public private key pair for the server and username and password for the clients we ensure authenticity. The server's public key is vendored in the application to make sure it isn't intercepted. All data exchanged between clients and the server is encrypted using a session key. This key is generated by the client and then sent encrypted with the RSA algorithm combined in ECB mode without padding using the 2048-bit public key of the server. To ensure freshness the server responds with a challenge, in the form of a 32-bit random value. Every message sent by the client in this session will be post-fixed with the challenge and the server will ignore messages that don't match the challenge. From then on the communication is encrypted with this shared secret. The session key and challenge are to be used for one session only and will therefore be deleted on both ends after a session closes. 
+Effectively the entities that interact in the system are only the child and guardian clients, the server will only serve safe remote storage for the data. By using a public private key pair for the server and username and password for the clients we ensure authenticity. The server's public key is vendored in the application to make sure it isn't intercepted. All data exchanged between clients and the server is encrypted using a session key. This key is generated by the client and then sent encrypted with the RSA algorithm combined in ECB mode without padding using the 2048-bit public key of the server. To ensure freshness the server responds with a challenge, in the form of a 32-bit random value. Every message sent by the client in this session will be post-fixed with the challenge and the server will ignore messages that don't match the challenge. From then on the communication is encrypted with this shared secret. The session key and challenge are to be used for one session only and will therefore be deleted on both ends after a session closes.
 
-By using symmetric key encryption for the location, the clients can ensure confidentiality of the location data sent from child to guardian, meaning the server can never read the location data sent to it. 
+By using symmetric key encryption for the location, the clients can ensure confidentiality of the location data sent from child to guardian, meaning the server can never read the location data sent to it.
 
 \section{Results}
 %% Versions (Describe basic, intermediate and advanced versions of the work and when are they
 %% expected to be achieved)
 \subsection{Project Versions}
-Before starting the project we determined what the Minimum Viable Product, the Intermediate and Advanced versions should consist of. In this section we will reflect on those lists of requirements and the strengths and weaknesses of the implementation. 
+Before starting the project we determined what the Minimum Viable Product, the Intermediate and Advanced versions should consist of. In this section we will reflect on those lists of requirements and the strengths and weaknesses of the implementation.
 
 \subsubsection{Minimum Viable Product (MVP)}
 We said the MVP of our product should consist of the following:
@@ -150,7 +153,7 @@ We said the MVP of our product should consist of the following:
     \item Data should be sent and stored encrypted, such that only guardians are able to track the child and the server is unable to know the location.
     % Data is encrypted using AES/CBC/NoPadding with shared secret
 \end{itemize}
-We decided to move the localization of the child client to the advanced version of the project, since the goal of this project is to show how security practices are implemented and retrieving the location from an Android phone took more time than expected. The rest of the requirements were implemented as discussed in the previous section and are up to standard according to security recommendations. Though, the current implementation does have some weaknesses. It does not add MAC signatures to send messages and therefore does not fully guarantee integrity and there are no requirements posed on the passwords of users, such as length or usage of strange characters, which could lead to weak passwords and therefore increases vulnerability to brute-force attacks. Here lies room for improvement in a future version. 
+We decided to move the localization of the child client to the advanced version of the project, since the goal of this project is to show how security practices are implemented and retrieving the location from an Android phone took more time than expected. The rest of the requirements were implemented as discussed in the previous section and are up to standard according to security recommendations. Though, the current implementation does have some weaknesses. It does not add MAC signatures to send messages and therefore does not fully guarantee integrity and there are no requirements posed on the passwords of users, such as length or usage of strange characters, which could lead to weak passwords and therefore increases vulnerability to brute-force attacks. Here lies room for improvement in a future version.
 
 \subsubsection{Intermediate version}
 The intermediate version of our product was supposed to include:
@@ -167,7 +170,7 @@ The intermediate version of our product was supposed to include:
     % This should be easy to implement
     \item \emph{Provide history of the child's location}.
 \end{itemize}
-As mentioned before location related implementation is moved to the full feature release. Because the alerts are partly linked to the live location of the child, this requirement is also moved to the next version. Allowing multiple guardians turned out to bring a lot of implementation issues with it, such as requiring the synchronisation of multiple clients which would take up to much time and was therefore removed from the requirements. On the other hand, the feature providing the history of the child's location was moved from there to the intermediate version, since implementation turned out to be more straightforward. In order to be able to display the history and be able to send alerts related to broadcasting time of the child, every location update of a child client contains a timestamp. This timestamp is encrypted with the shared secret, together with the latitude and longitude of the child. When the guardian receives a location from the server, the application checks if the timestamp is within five minutes before the current time and if not then the guardian receives an alert. 
+As mentioned before location related implementation is moved to the full feature release. Because the alerts are partly linked to the live location of the child, this requirement is also moved to the next version. Allowing multiple guardians turned out to bring a lot of implementation issues with it, such as requiring the synchronisation of multiple clients which would take up to much time and was therefore removed from the requirements. On the other hand, the feature providing the history of the child's location was moved from there to the intermediate version, since implementation turned out to be more straightforward. In order to be able to display the history and be able to send alerts related to broadcasting time of the child, every location update of a child client contains a timestamp. This timestamp is encrypted with the shared secret, together with the latitude and longitude of the child. When the guardian receives a location from the server, the application checks if the timestamp is within five minutes before the current time and if not then the guardian receives an alert.
 
 \subsubsection{Full Feature Release}
 Finally, we wanted the full feature release to extend the product with:

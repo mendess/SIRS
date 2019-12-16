@@ -5,6 +5,6 @@ all:
 		-o ../docs/index.html \
 		--slide-level=2 \
 		--metadata pagetitle=Spykid \
-		-V theme=serif \
+		-V theme=white \
 		presentation.md
 

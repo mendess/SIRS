@@ -3,3 +3,5 @@
 *.pdf
 *.toc
 *.out
+*.bbl
+*.blg

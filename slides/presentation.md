@@ -22,11 +22,22 @@ There are 3 actors in the system:
 - Guardians
 - Children
 
+<div class="notes">
+Este nice notes para eu saber que dizer
+</div>
+
+# Implementation
+
+![](./sirs_architecture.png)
+
+## Secure channels {data-background-image="./sirs_architecture.png" data-background-opacity=0.2}
+
+- Client ⇔ Server
+- Guardian ⇔ Child
+
 
 # Demo
 
-##
-
-### Demo
+## Demo
 
 <video data-autoplay src="sirs_demo.mp4"></video>
