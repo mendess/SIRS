@@ -92,7 +92,7 @@ password hashed and salted.
 
 ![](./app_use.jpeg)
 
-## Demo
+## [Demo](https://youtu.be/1CRWco1IIqg)
 
 <video data-autoplay src="sirs_demo.mp4"></video>
-[yt](https://youtu.be/1CRWco1IIqg)
+
