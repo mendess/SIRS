@@ -53,10 +53,13 @@ they can still communicate with confidentiality.
 
 ## Secure Protocols
 
+<div style="flex">
+<div>
 - AES in CBC mode for session keys and the child/guardian shared secret
 - RSA for server authentication with a private/public key pair
-
-![](./protocol.jpeg)
+</div>
+![](protocol.jpeg)
+</div>
 
 <div class="notes">
 For the session keys and the shared secrets, since both are symmetric keys, we

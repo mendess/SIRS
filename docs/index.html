@@ -68,18 +68,22 @@
 </aside>
 </section><section id="secure-protocols" class="slide level2">
 <h2>Secure Protocols</h2>
+<div style="flex">
+<div>
 <ul>
 <li>AES in CBC mode for session keys and the child/guardian shared secret</li>
 <li>RSA for server authentication with a private/public key pair</li>
 </ul>
-<p><img data-src="./protocol.jpeg" /></p>
+</div>
+<p><img data-src="protocol.jpeg" /></p>
+</div>
 <aside class="notes">
 <p>For the session keys and the shared secrets, since both are symmetric keys, we opted for the AES algorithm in CBC mode as is recommended by the Android Developer Community.</p>
 <p>For authentication we use 2 distinct methods, one for the server which is a public private key pair where the public key of the server is vendored with the application to make sure it is the correct key.</p>
 <p>For the authentication of the client we use a user password pair, sending the password hashed and salted.</p>
 </aside>
 </section></section>
-<section><section id="demo" class="title-slide slide level1"><h1>Demo</h1></section><section id="demo-1" class="slide level2">
+<section><section id="demo" class="title-slide slide level1"><h1>Demo</h1><p><img data-src="./app_use.jpeg" /></p></section><section id="demo-1" class="slide level2">
 <h2>Demo</h2>
 <video data-autoplay src="sirs_demo.mp4">
 </video>
