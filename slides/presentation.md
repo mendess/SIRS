@@ -59,6 +59,10 @@ communication is done with a session key, but all the sensitive information sent
 to the server is encrypted with a secret shared between the guardian and the
 child. This way, although these two clients never directly message each other
 they can still communicate with confidentiality.
+
+To make sure the secret shared between the child and the guardian isn't
+intercepted this sharing is done physically with a QR code. Where the guardian
+produces a code and the child scans it.
 </div>
 
 ## Secure Protocols
