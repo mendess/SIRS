@@ -50,23 +50,35 @@
 <li>Children</li>
 </ul>
 <aside class="notes">
-<p>Este nice notes para eu saber que dizer</p>
+
 </aside>
 </section></section>
-<section><section id="implementation" class="title-slide slide level1"><h1>Implementation</h1><p><img data-src="./sirs_architecture.png" /></p></section><section id="secure-channels" class="slide level2" data-background-image="./sirs_architecture.png" data-background-opacity="0.2">
+<section><section id="implementation" class="title-slide slide level1"><h1>Implementation</h1><p><img data-src="./sirs_architecture.png" /></p>
+<aside class="notes">
+<p>This is our architecture, as you can see there are 2 types of clients and a server.</p>
+<p>The client server communication is always done using a session key while the indirect child guardian communication is encrypted with a shared secret.</p>
+</aside></section><section id="secure-channels" class="slide level2" data-background-image="./sirs_architecture.png" data-background-opacity="0.2">
 <h2>Secure channels</h2>
 <ul>
 <li>Client ⇔ Server</li>
 <li>Guardian ⇔ Child</li>
 </ul>
+<aside class="notes">
+<p>There are 2 kinds of secure channels, as mentioned before, the client server communication is done with a session key, but all the sensitive information sent to the server is encrypted with a secret shared between the guardian and the child. This way, although these two clients never directly message each other they can still communicate with confidentiality.</p>
+</aside>
 </section><section id="secure-protocols" class="slide level2">
 <h2>Secure Protocols</h2>
 <ul>
 <li>AES in CBC mode for session keys and the child/guardian shared secret</li>
 <li>RSA for server authentication with a private/public key pair</li>
 </ul>
+<p><img data-src="./protocol.jpeg" /></p>
+<aside class="notes">
+<p>For the session keys and the shared secrets, since both are symmetric keys, we opted for the AES algorithm in CBC mode as is recommended by the Android Developer Community.</p>
+<p>For authentication we use 2 distinct methods, one for the server which is a public private key pair where the public key of the server is vendored with the application to make sure it is the correct key.</p>
+<p>For the authentication of the client we use a user password pair, sending the password hashed and salted.</p>
+</aside>
 </section></section>
-<section id="results" class="title-slide slide level1"><h1>Results</h1><p><img data-src="./app_use.jpeg" /></p></section>
 <section><section id="demo" class="title-slide slide level1"><h1>Demo</h1></section><section id="demo-1" class="slide level2">
 <h2>Demo</h2>
 <video data-autoplay src="sirs_demo.mp4">

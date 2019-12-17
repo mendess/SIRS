@@ -56,6 +56,8 @@ they can still communicate with confidentiality.
 - AES in CBC mode for session keys and the child/guardian shared secret
 - RSA for server authentication with a private/public key pair
 
+![](./protocol.jpeg)
+
 <div class="notes">
 For the session keys and the shared secrets, since both are symmetric keys, we
 opted for the AES algorithm in CBC mode as is recommended by the Android
@@ -69,11 +71,9 @@ For the authentication of the client we use a user password pair, sending the
 password hashed and salted.
 </div>
 
-# Results
+# Demo
 
 ![](./app_use.jpeg)
-
-# Demo
 
 ## Demo
 
