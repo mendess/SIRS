@@ -9,10 +9,18 @@
 As a guardian you might want to track your child's location to make sure they
 don't stray too far from where they should be.
 
+<div class="notes">
+
+</div>
+
 ## Requirements
 
 Among others it's important that the child's location be kept in absolute secret
 as it is a very sensitive piece of information.
+
+<div class="notes">
+
+</div>
 
 ## Trust Assumptions
 
@@ -21,6 +29,10 @@ There are 3 actors in the system:
 - Server
 - Guardians
 - Children
+
+<div class="notes">
+
+</div>
 
 # Implementation
 

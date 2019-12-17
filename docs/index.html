@@ -38,9 +38,15 @@
 <li>Felipe Gorostiaga</li>
 <li>Pedro Mendes</li>
 </ul></section>
-<section><section id="the-problem" class="title-slide slide level1"><h1>The problem</h1><p>As a guardian you might want to track your child’s location to make sure they don’t stray too far from where they should be.</p></section><section id="requirements" class="slide level2">
+<section><section id="the-problem" class="title-slide slide level1"><h1>The problem</h1><p>As a guardian you might want to track your child’s location to make sure they don’t stray too far from where they should be.</p>
+<aside class="notes">
+
+</aside></section><section id="requirements" class="slide level2">
 <h2>Requirements</h2>
 <p>Among others it’s important that the child’s location be kept in absolute secret as it is a very sensitive piece of information.</p>
+<aside class="notes">
+
+</aside>
 </section><section id="trust-assumptions" class="slide level2">
 <h2>Trust Assumptions</h2>
 <p>There are 3 actors in the system:</p>
@@ -57,6 +63,7 @@
 <aside class="notes">
 <p>This is our architecture, as you can see there are 2 types of clients and a server.</p>
 <p>The client server communication is always done using a session key while the indirect child guardian communication is encrypted with a shared secret.</p>
+<p>This is to prevent the server from ever knowing the locations of the children.</p>
 </aside></section><section id="secure-channels" class="slide level2" data-background-image="./sirs_architecture.png" data-background-opacity="0.2">
 <h2>Secure channels</h2>
 <ul>
