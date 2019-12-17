@@ -22,10 +22,6 @@ There are 3 actors in the system:
 - Guardians
 - Children
 
-<div class="notes">
-
-</div>
-
 # Implementation
 
 ![](./sirs_architecture.png)
