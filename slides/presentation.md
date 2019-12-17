@@ -32,6 +32,8 @@ server.
 
 The client server communication is always done using a session key while the
 indirect child guardian communication is encrypted with a shared secret.
+
+This is to prevent the server from ever knowing the locations of the children.
 </div>
 
 ## Secure channels {data-background-image="./sirs_architecture.png" data-background-opacity=0.2}
