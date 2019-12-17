@@ -15,19 +15,35 @@ data class Location(
     val timestamp: LocalDateTime,
     val sos: Boolean = false
 ) : Parcelable, Comparable<Location> {
-
-    override fun compareTo(other: Location): Int = this.timestamp.compareTo(other.timestamp)
+    override fun compareTo(other: Location): Int {
+        val ct = this.timestamp.compareTo(other.timestamp)
+        return if(ct == 0)
+            this.sos.compareTo(other.sos)
+        else ct
+    }
 
     constructor(parcel: Parcel) : this(
         parcel.readDouble(),
         parcel.readDouble(),
-        LocalDateTime.parse(parcel.readString())
+        LocalDateTime.parse(parcel.readString()),
+        parcel.readByte() != 0.toByte()
     )
+
+    internal fun encrypt(keyName: String): Packet? {
+        return EncryptionAlgorithm.tryGet()?.let { ea ->
+            ea.getKey(keyName)?.let {
+                EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp|$sos".toByteArray())
+            }
+        }.also {
+            Log.d("INFO", "Encrypted ${this} into '$it'")
+        }
+    }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeDouble(x)
         parcel.writeDouble(y)
-        parcel.writeString(timestamp.toString())
+        parcel.writeString(this.timestamp.toString())
+        parcel.writeByte(if (sos) 1 else 0)
     }
 
     override fun describeContents(): Int {
@@ -50,18 +66,13 @@ data class Location(
                     String(EncryptionAlgorithm.decrypt(it.key, Packet.from(data)))
                 }
             }?.split('|')?.let {
-                Location(it[0].toDouble(), it[1].toDouble(), LocalDateTime.parse(it[2]))
+                Location(
+                    it[0].toDouble(),
+                    it[1].toDouble(),
+                    LocalDateTime.parse(it[2]),
+                    it.getOrNull(3)?.toBoolean() ?: false
+                )
             }
-        }
-    }
-
-    internal fun encrypt(keyName: String): Packet? {
-        return EncryptionAlgorithm.tryGet()?.let { ea ->
-            ea.getKey(keyName)?.let {
-                EncryptionAlgorithm.encrypt(it.key, "$x|$y|$timestamp|$sos".toByteArray())
-            }
-        }.also {
-            Log.d("INFO", "Encrypted ${this} into '$it'")
         }
     }
 }

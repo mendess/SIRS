@@ -38,8 +38,8 @@ public class AddBeaconActivity extends AppCompatActivity {
 
     @SuppressLint("SetTextI18n")
     private void createUser() {
-        String username = userInput.getText().toString();
-        String password = passInput.getText().toString();
+        String username = userInput.getText().toString().trim();
+        String password = passInput.getText().toString().trim();
         if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Invalid input, try again...", Toast.LENGTH_SHORT).show();
         } else {

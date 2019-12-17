@@ -68,9 +68,10 @@ public class MapsActivity extends FragmentActivity {
 
     private void updateLocation(final GoogleMap map, final Child child, final List<Location> locations) {
         for (Location l : locations) {
-            if (seenLocations.contains(l)) continue;
+            if(seenLocations.contains(l)) continue;
             if (l.getSos()) {
                 NotificationManagerCompat.from(this).notify(1, sos);
+                runOnUiThread(() -> Toast.makeText(this, "You child is in distress", Toast.LENGTH_LONG).show());
             }
             Log.d("INFO", "Location" + l);
             synchronized (seenLocations) {
